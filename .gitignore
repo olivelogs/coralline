@@ -1,0 +1,15 @@
+# OS Junk
+.DS_Store
+
+# folders
+resources/
+samples/
+AVisualizer/
+tmp/
+tidal/
+.vscode/
+
+# specific files
+chime/package-lock.json
+
+
