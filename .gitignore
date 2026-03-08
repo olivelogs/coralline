@@ -8,6 +8,8 @@ AVisualizer/
 tmp/
 tidal/
 .vscode/
+scd/docs/
+archive/
 
 # specific files
 chime/package-lock.json

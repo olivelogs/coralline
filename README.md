@@ -11,23 +11,15 @@ We are building a dedicated MCP for using this tooling. In chat, claude can send
 (later, there's a robot involved, because why not)
 
 Current capabilities: Claude can send OSC messages using MCP2OSC to scsynth server SuperDirt. That is the extent of it.
-Current goals: two skills and a new OSC address space. Uncertain if a boilerplate like that was used in Sonic Pi is necessary. Getting claude to run Tidal patterning would be ideal (might be beyond what is possible in UI). 
+Current goals: two skills and a new OSC address space. Uncertain if a boilerplate like that was used in Sonic Pi is necessary. Getting claude to run TidalCycles patterning would be ideal (might be beyond what is possible in UI). 
 
-Skill 1: SuperDirt. Synths, effects, samples, quirks and gotchas (i.e. Tidal notes are on a different scale than MIDI), OSC usage, some examples. Likely similar to the Sonic Pi skill.
-This is priority. 
-How to start (`s`)/stop, ports (superdirt scsynth listens on 57120 by default), default assumptions, what parameters mean (`s`, `n`, `midinote`, `note`, `gain`, `pan`, etc.), what the safe ranges are
+Skill 1: SuperDirt. 
 
-Skill 2: SynthDefs skill. Claude should be able to write their own SuperCollider SynthDefs for new sounds they want to make. Bespoke sound. This should be a separate skill as it will not be used as often.
-Should cover: `SinOsc`, `Saw`, `Pulse`, `WhiteNoise`, etc; the envelope generators, `CombL` and friends for physical modeling, `Out` and bus routing, how SuperDirt expects its SynthDefs structured. Plus examples of the existing supers for the patterns.
-
-Thoughts on tidal:
-Depending on where we are working, real tidal might be more difficult to run. Claude Code in VSCode should be able to run it, but claude.ai will have more trouble here. Further, when we expand to more models, not all models will be able to interact in this way (tidal requires a text editor, such as vim, pulsar, emacs, vscode extension). 
-In the latter cases, one option is i run it for claude/other models, but this removes the element of "claude makes music". 
-Alternatively, we may be able to fork MCP2OSC and adapt it for what we are doing, including a pattern MCP that injects text into tidal. 
+Skill 2: SynthDefs skill. 
 
 
 Requires:
---Sonic Pi software-- not anymore!
+~~Sonic Pi software~~ not anymore!
 TidalCycles / SuperCollider / **SuperDirt**
 [MCP2OSC](https://github.com/yyf/MCP2OSC)
 modified [AVisualizer](https://github.com/JuzzyDee/AVisualizer) may not be necessary with SuperCollider, though the code may be useful for writing analysis output. Was necessary with Sonic Pi, but SC should be capable of outputting audio data?

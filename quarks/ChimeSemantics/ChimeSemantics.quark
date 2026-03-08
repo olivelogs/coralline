@@ -1,0 +1,9 @@
+(
+    name: "ChimeSemantics",
+    summary: "Semantic parameter mapping for agent-driven music composition",
+    version: "0.1.0",
+    schelp: "ChimeSemantics",
+    url: "https://github.com/olivelo/chime",
+    dependencies: [],
+    since: "2026-03-06"
+)
