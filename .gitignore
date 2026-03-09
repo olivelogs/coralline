@@ -10,6 +10,7 @@ tidal/
 .vscode/
 scd/docs/
 archive/
+quarks/ChimeSemantics/Data/probes
 
 # specific files
 chime/package-lock.json
