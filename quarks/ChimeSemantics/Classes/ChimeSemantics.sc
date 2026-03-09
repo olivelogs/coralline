@@ -50,27 +50,47 @@ ChimeSemantics {
 
     *loadDefaultMappings {
         // ---- supervibe ----
-        // A warm, bell-like vibraphone synth.
-        // modfreq/modamp control FM brightness.
-        // velocity controls amplitude/harmonic richness.
-        // detune controls stereo width.
+        // Warm, bell-like vibraphone synth. Our most-used.
+        // EMPIRICALLY VALIDATED March 2026 via probe sweep.
+        // Key findings:
+        //   - velocity is the dominant brightness AND warmth control (+0.99 both)
+        //   - modfreq is INVERSE brightness (-0.65), not positive!
+        //   - decay is the weight dimension (+0.99 weight, -0.99 warmth)
+        //   - modamp is warmth(+0.99) and anti-weight(-1.0)
+        //   - No pitch drift on any param. Clean timbral space.
         mappings[\supervibe] = IdentityDictionary[
             \brightness -> [
-                // Each entry: (param, inputRange, outputRange, curve)
-                // inputRange is always [0, 1] (semantic)
-                // outputRange is the useful range of the actual param
-                // curve: \lin, \exp, or a number (curvature)
-                (\param: \modfreq, \outLo: 0, \outHi: 20, \curve: \exp, \weight: 0.6),
-                (\param: \modamp,  \outLo: 0, \outHi: 1,  \curve: \lin, \weight: 0.4),
+                (\param: \velocity, \outLo: 0.2, \outHi: 1.0, \curve: \lin, \weight: 0.45),
+                (\param: \modamp,   \outLo: 0,   \outHi: 1,   \curve: \lin, \weight: 0.30),
+                (\param: \detune,   \outLo: 0,   \outHi: 0.5, \curve: \lin, \weight: 0.15),
+                // modfreq is inverse — high brightness = LOW modfreq
+                (\param: \modfreq,  \outLo: 20,  \outHi: 0,   \curve: \exp, \weight: 0.10),
             ],
             \warmth -> [
-                (\param: \velocity, \outLo: 0.2, \outHi: 1.0, \curve: \lin, \weight: 1.0),
+                (\param: \velocity, \outLo: 0.2, \outHi: 1.0, \curve: \lin, \weight: 0.40),
+                (\param: \modamp,   \outLo: 0,   \outHi: 1,   \curve: \lin, \weight: 0.40),
+                // decay is inverse warmth — high warmth = LOW decay
+                (\param: \decay,    \outLo: 2,   \outHi: 0,   \curve: \lin, \weight: 0.20),
+            ],
+            \weight -> [
+                // decay adds weight, modamp/velocity remove it
+                (\param: \decay,    \outLo: 0,   \outHi: 2,   \curve: \lin, \weight: 0.50),
+                (\param: \modamp,   \outLo: 1,   \outHi: 0,   \curve: \lin, \weight: 0.25),
+                (\param: \velocity, \outLo: 1,   \outHi: 0.2, \curve: \lin, \weight: 0.25),
             ],
             \movement -> [
-                (\param: \modfreq, \outLo: 0, \outHi: 20, \curve: \lin, \weight: 1.0),
+                (\param: \velocity, \outLo: 0.2, \outHi: 1.0, \curve: \lin, \weight: 0.45),
+                (\param: \detune,   \outLo: 0,   \outHi: 0.5, \curve: \lin, \weight: 0.30),
+                // decay is inverse movement
+                (\param: \decay,    \outLo: 2,   \outHi: 0,   \curve: \lin, \weight: 0.25),
             ],
-            \space -> [
-                (\param: \detune,  \outLo: 0, \outHi: 0.5, \curve: \lin, \weight: 1.0),
+            \texture -> [
+                // velocity smooths, detune roughens
+                (\param: \velocity, \outLo: 1,   \outHi: 0.2, \curve: \lin, \weight: 0.55),
+                (\param: \detune,   \outLo: 0,   \outHi: 0.5, \curve: \lin, \weight: 0.45),
+            ],
+            \attack -> [
+                (\param: \velocity, \outLo: 0.2, \outHi: 1.0, \curve: \lin, \weight: 1.0),
             ],
         ];
 
