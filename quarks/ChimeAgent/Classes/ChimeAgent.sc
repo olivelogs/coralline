@@ -1,11 +1,20 @@
 //    ChimeAgent — Bidirectional OSC layer for agent ↔ SuperCollider.
 //
 //    Handles:
-//    - /chime/play     → semantic play (routes through ChimeSemantics → SuperDirt)
-//    - /chime/raw      → bypass semantics, raw SuperDirt params
-//    - /chime/loop/   → pattern looping via JITLib (Pdef)
-//    - /chime/ping/   → request state/analysis (pong)
-//    - /chime/pong/   → outbound analysis/state data
+//    - /chime/play      → semantic play (routes through ChimeSemantics → SuperDirt)
+//    - /chime/raw       → bypass semantics, raw SuperDirt params
+//    - /chime/loop/start → start pattern loop via JITLib (Pdef)
+//    - /chime/loop/stop  → stop a named loop
+//    - /chime/loop/modify → hot-swap a running loop
+//    - /chime/ping/state → request state (pong)
+//    - /chime/pong/      → outbound analysis/state data
+//
+//    /chime/play supports a "|" separator for mixing semantic + raw params:
+//        /chime/play supervibe 0 brightness 0.7 warmth 0.4 | gain 1.2 krush 3
+//
+//    CRITICAL: n uses SuperDirt's note system, NOT MIDI!
+//      n 0 = C5 (middle C), n -12 = C4, n 12 = C6
+//      To convert from MIDI: n = midinote - 60
 //
 //    Setup:
 //        // After SuperDirt is running:
@@ -66,15 +75,12 @@ ChimeAgent {
         // ==========================================
         // /chime/play — Semantic play
         // ==========================================
-        // Expected format:
-        //   /chime/play synthName note [dim1 val1 dim2 val2 ...]
-        // Plus optional raw params after a "|" separator:
-        //   /chime/play supervibe 60 brightness 0.7 warmth 0.4 | gain 1.2 pan 0.3
+        // Format:
+        //   /chime/play synthName n [dim1 val1 ...] [| rawKey1 rawVal1 ...]
+        // The "|" separator divides semantic params (resolved via ChimeSemantics)
+        // from raw SuperDirt params (passed through as-is, e.g. effects).
         //
-        // For now (v0.1), simplified:
-        //   /chime/play synthName n semanticKey1 val1 semanticKey2 val2 ...
-        //
-        // CRITICAL: n uses SuperDirt's note system, NOT MIDI!
+        // n uses SuperDirt's note system, NOT MIDI!
         //   n 0 = C5 (middle C), n -12 = C4, n 12 = C6
         //   To convert from MIDI: n = midinote - 60
 
@@ -97,11 +103,21 @@ ChimeAgent {
         // ==========================================
         // /chime/loop/start — Start a named loop
         // ==========================================
-        // /chime/loop/start loopName synthName "0 3 7 12" cycleDur
+        // /chime/loop/start loopName synthName "0 3 7 12" cycleDur [dim1 val1 ...] [| raw1 val1 ...]
         oscResponders = oscResponders.add(
             OSCdef(\chimeLoopStart, { |msg, time, addr, recvPort|
                 this.handleLoopStart(msg);
             }, '/chime/loop/start')
+        );
+
+        // ==========================================
+        // /chime/loop/modify — Hot-swap a running loop
+        // ==========================================
+        // Same format as loop/start — redefines the Pdef in place
+        oscResponders = oscResponders.add(
+            OSCdef(\chimeLoopModify, { |msg, time, addr, recvPort|
+                this.handleLoopStart(msg);  // same logic, Pdef handles hot-swap
+            }, '/chime/loop/modify')
         );
 
         // ==========================================
@@ -129,50 +145,77 @@ ChimeAgent {
     // ---- Play handlers ----
 
     *handlePlay { |msg|
-        var synthName, midinote, semantics, resolved, args;
+        var synthName, note, semantics, rawParams, resolved, args, pipeIdx;
 
-        // msg format: ['/chime/play', synthName, n, key1, val1, key2, val2, ...]
+        // msg format: ['/chime/play', synthName, n, key1, val1, ... | rawKey1, rawVal1, ...]
         if(msg.size < 3) {
             "ChimeAgent: /chime/play needs at least synthName and n".warn;
             ^this
         };
 
         synthName = msg[1].asSymbol;
-        midinote = msg[2].asFloat;  // this is 'n', not MIDI — var name kept for brevity
+        note = msg[2].asFloat;  // this is 'n', not MIDI
 
-        // Parse semantic key-value pairs
-        semantics = IdentityDictionary.new;
-        (3, 5 .. msg.size - 2).do { |i|
-            var key = msg[i].asSymbol;
-            var val = msg[i+1].asFloat;
-            semantics[key] = val;
+        // Find pipe separator index (if any)
+        pipeIdx = nil;
+        (3..msg.size-1).do { |i|
+            if(msg[i].asString == "|") { pipeIdx = i };
         };
 
-        // Resolve through ChimeSemantics
+        // Parse semantic key-value pairs (before pipe or all if no pipe)
+        semantics = IdentityDictionary.new;
+        rawParams = IdentityDictionary.new;
+
+        if(pipeIdx.notNil) {
+            // Semantic params: indices 3 to pipeIdx-1
+            (3, 5 .. pipeIdx - 2).do { |i|
+                if(i+1 < pipeIdx) {
+                    semantics[msg[i].asSymbol] = msg[i+1].asFloat;
+                };
+            };
+            // Raw params: indices pipeIdx+1 to end
+            (pipeIdx+1, pipeIdx+3 .. msg.size - 2).do { |i|
+                if(i+1 < msg.size) {
+                    rawParams[msg[i].asSymbol] = msg[i+1].asFloat;
+                };
+            };
+        } {
+            // No pipe — everything is semantic
+            (3, 5 .. msg.size - 2).do { |i|
+                if(i+1 < msg.size) {
+                    semantics[msg[i].asSymbol] = msg[i+1].asFloat;
+                };
+            };
+        };
+
+        // Resolve semantic params through ChimeSemantics
         resolved = ChimeSemantics.resolveAll(synthName, semantics);
 
         // Build SuperDirt args — use 'n' not 'midinote'
-        args = ["s", synthName.asString, "n", midinote];
+        args = ["s", synthName.asString, "n", note];
 
-        // Add resolved params
+        // Add resolved semantic params
         resolved.keysValuesDo { |param, val|
             args = args ++ [param.asString, val];
         };
 
-        // Add gain default if not specified
-        if(resolved[\gain].isNil) {
+        // Add raw params (effects, gain, pan, etc.)
+        rawParams.keysValuesDo { |param, val|
+            args = args ++ [param.asString, val];
+        };
+
+        // Add gain default if not specified anywhere
+        if(resolved[\gain].isNil and: { rawParams[\gain].isNil }) {
             args = args ++ ["gain", 1.0];
         };
 
         args = args ++ ["orbit", 0];
 
-        // Send to SuperDirt
-        // (In practice this goes through ~dirt, but for OSC-based agents
-        // we send directly to SuperDirt's OSC port)
         this.sendToDirt(args);
 
-        // Log it
-        "ChimeAgent: play % n % → %".format(synthName, midinote, resolved).postln;
+        "ChimeAgent: play % n % → sem:% raw:%".format(
+            synthName, note, resolved, rawParams
+        ).postln;
     }
 
     *handleRaw { |msg|
@@ -192,12 +235,14 @@ ChimeAgent {
     // ---- Loop handlers (JITLib) ----
 
     *handleLoopStart { |msg|
-        // msg: ['/chime/loop/start', loopName, synthName, notePattern, cycleDur]
-        // notePattern is a string like "0 3 7 12" (space-separated note numbers)
+        // msg: ['/chime/loop/start', loopName, synthName, notePattern, cycleDur, ...]
+        // Optional trailing args: semantic and/or raw params (with | separator)
+        //   /chime/loop/start myloop supersaw "0 3 7" 2.0 brightness 0.7 | krush 3
         var loopName, synthName, noteStr, cycleDur, notes, dur;
+        var semantics, rawParams, resolved, extraPairs, pipeIdx;
 
         if(msg.size < 5) {
-            "ChimeAgent: /chime/loop/start needs loopName, synthName, notePattern, cycleDur".warn;
+            "ChimeAgent: loop needs loopName, synthName, notePattern, cycleDur".warn;
             ^this
         };
 
@@ -210,22 +255,67 @@ ChimeAgent {
         notes = noteStr.split($ ).collect(_.asFloat);
         dur = cycleDur / notes.size;
 
-        // Create or replace a Pdef
+        // Parse optional semantic + raw params (from index 5 onward)
+        semantics = IdentityDictionary.new;
+        rawParams = IdentityDictionary.new;
+
+        if(msg.size > 5) {
+            pipeIdx = nil;
+            (5..msg.size-1).do { |i|
+                if(msg[i].asString == "|") { pipeIdx = i };
+            };
+
+            if(pipeIdx.notNil) {
+                (5, 7 .. pipeIdx - 2).do { |i|
+                    if(i+1 < pipeIdx) {
+                        semantics[msg[i].asSymbol] = msg[i+1].asFloat;
+                    };
+                };
+                (pipeIdx+1, pipeIdx+3 .. msg.size - 2).do { |i|
+                    if(i+1 < msg.size) {
+                        rawParams[msg[i].asSymbol] = msg[i+1].asFloat;
+                    };
+                };
+            } {
+                (5, 7 .. msg.size - 2).do { |i|
+                    if(i+1 < msg.size) {
+                        semantics[msg[i].asSymbol] = msg[i+1].asFloat;
+                    };
+                };
+            };
+        };
+
+        // Resolve semantic params
+        resolved = if(semantics.size > 0) {
+            ChimeSemantics.resolveAll(synthName, semantics);
+        } { () };
+
+        // Build extra Pbind pairs from resolved + raw
+        extraPairs = [];
+        resolved.keysValuesDo { |param, val|
+            extraPairs = extraPairs ++ [param, val];
+        };
+        rawParams.keysValuesDo { |param, val|
+            extraPairs = extraPairs ++ [param, val];
+        };
+
+        // Create or replace a Pdef (JITLib hot-swaps naturally)
         Pdef(loopName,
             Pbind(
                 \type, \dirt,
                 \s, synthName.asString,
                 \n, Pseq(notes, inf),
                 \dur, dur,
-                \gain, 1.0,
+                \gain, rawParams[\gain] ? 1.0,
                 \orbit, 0,
+                *extraPairs
             )
         ).play;
 
         loops[loopName] = Pdef(loopName);
 
-        "ChimeAgent: loop '%' started — % playing % (cycle %s)".format(
-            loopName, synthName, notes, cycleDur
+        "ChimeAgent: loop '%' started — % playing % (cycle %s, sem:% raw:%)".format(
+            loopName, synthName, notes, cycleDur, resolved, rawParams
         ).postln;
     }
 
