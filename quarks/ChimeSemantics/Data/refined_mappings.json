@@ -1,0 +1,3138 @@
+{
+  "soshats": {
+    "brightness": [
+      {
+        "param": "resonance",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.98
+      }
+    ],
+    "warmth": [
+      {
+        "param": "resonance",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.91
+      }
+    ],
+    "texture": [
+      {
+        "param": "resonance",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.93
+      }
+    ],
+    "movement": [
+      {
+        "param": "resonance",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.98
+      }
+    ],
+    "space": [],
+    "weight": [
+      {
+        "param": "resonance",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.9
+      }
+    ],
+    "attack": [
+      {
+        "param": "resonance",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.96
+      }
+    ],
+    "pitch_controls": [
+      {
+        "param": "pitch1",
+        "drift_semitones": 33.7
+      }
+    ],
+    "needs_review": []
+  },
+  "soskick": {
+    "brightness": [
+      {
+        "param": "pitch2",
+        "outLo": 0,
+        "outHi": 0.5,
+        "curve": "lin",
+        "weight": 0.676,
+        "confidence": 0.96
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 5,
+        "curve": "lin",
+        "weight": 0.324,
+        "confidence": 0.46
+      }
+    ],
+    "warmth": [
+      {
+        "param": "pitch2",
+        "outLo": 0,
+        "outHi": 0.5,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.85
+      }
+    ],
+    "texture": [
+      {
+        "param": "pitch2",
+        "outLo": 0,
+        "outHi": 0.5,
+        "curve": "lin",
+        "weight": 0.569,
+        "confidence": 0.62
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 5,
+        "curve": "lin",
+        "weight": 0.431,
+        "confidence": 0.47
+      }
+    ],
+    "movement": [
+      {
+        "param": "pitch2",
+        "outLo": 0,
+        "outHi": 0.5,
+        "curve": "lin",
+        "weight": 0.652,
+        "confidence": 0.92
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 5,
+        "curve": "lin",
+        "weight": 0.348,
+        "confidence": 0.49
+      }
+    ],
+    "space": [],
+    "weight": [
+      {
+        "param": "pitch2",
+        "outLo": 0.5,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.96
+      }
+    ],
+    "attack": [
+      {
+        "param": "pitch2",
+        "outLo": 0,
+        "outHi": 0.5,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.94
+      }
+    ],
+    "pitch_controls": [
+      {
+        "param": "pitch1",
+        "drift_semitones": 25.0
+      }
+    ],
+    "needs_review": []
+  },
+  "sossnare": {
+    "brightness": [
+      {
+        "param": "pitch1",
+        "outLo": 500,
+        "outHi": 5000,
+        "curve": "lin",
+        "weight": 0.36,
+        "confidence": 0.99
+      },
+      {
+        "param": "resonance",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.36,
+        "confidence": 0.99
+      },
+      {
+        "param": "voice",
+        "outLo": 3,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.28,
+        "confidence": 0.77
+      }
+    ],
+    "warmth": [
+      {
+        "param": "pitch1",
+        "outLo": 5000,
+        "outHi": 500,
+        "curve": "lin",
+        "weight": 0.505,
+        "confidence": 0.96
+      },
+      {
+        "param": "resonance",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.495,
+        "confidence": 0.94
+      }
+    ],
+    "texture": [
+      {
+        "param": "pitch1",
+        "outLo": 500,
+        "outHi": 5000,
+        "curve": "lin",
+        "weight": 0.378,
+        "confidence": 0.99
+      },
+      {
+        "param": "resonance",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.374,
+        "confidence": 0.98
+      },
+      {
+        "param": "voice",
+        "outLo": 3,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.248,
+        "confidence": 0.65
+      }
+    ],
+    "movement": [
+      {
+        "param": "pitch1",
+        "outLo": 500,
+        "outHi": 5000,
+        "curve": "lin",
+        "weight": 0.35,
+        "confidence": 0.99
+      },
+      {
+        "param": "resonance",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.35,
+        "confidence": 0.99
+      },
+      {
+        "param": "voice",
+        "outLo": 3,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.3,
+        "confidence": 0.85
+      }
+    ],
+    "space": [],
+    "weight": [
+      {
+        "param": "pitch1",
+        "outLo": 500,
+        "outHi": 5000,
+        "curve": "lin",
+        "weight": 0.4,
+        "confidence": 0.96
+      },
+      {
+        "param": "resonance",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.408,
+        "confidence": 0.98
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.192,
+        "confidence": 0.46
+      }
+    ],
+    "attack": [
+      {
+        "param": "pitch1",
+        "outLo": 500,
+        "outHi": 5000,
+        "curve": "lin",
+        "weight": 0.34,
+        "confidence": 0.69
+      },
+      {
+        "param": "resonance",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.448,
+        "confidence": 0.91
+      },
+      {
+        "param": "voice",
+        "outLo": 3,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.212,
+        "confidence": 0.43
+      }
+    ],
+    "pitch_controls": [
+      {
+        "param": "semitone",
+        "drift_semitones": 28.7
+      }
+    ],
+    "needs_review": []
+  },
+  "sostoms": {
+    "brightness": [],
+    "warmth": [],
+    "texture": [],
+    "movement": [],
+    "space": [],
+    "weight": [],
+    "attack": [],
+    "pitch_controls": [
+      {
+        "param": "voice",
+        "drift_semitones": 25.9
+      }
+    ],
+    "needs_review": []
+  },
+  "super808": {
+    "brightness": [
+      {
+        "param": "rate",
+        "outLo": 5,
+        "outHi": 0.1,
+        "curve": "lin",
+        "weight": 0.429,
+        "confidence": 0.63
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.571,
+        "confidence": 0.84
+      }
+    ],
+    "warmth": [
+      {
+        "param": "rate",
+        "outLo": 5,
+        "outHi": 0.1,
+        "curve": "lin",
+        "weight": 0.411,
+        "confidence": 0.58
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.589,
+        "confidence": 0.83
+      }
+    ],
+    "texture": [
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.67
+      }
+    ],
+    "movement": [
+      {
+        "param": "rate",
+        "outLo": 5,
+        "outHi": 0.1,
+        "curve": "lin",
+        "weight": 0.413,
+        "confidence": 0.45
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.587,
+        "confidence": 0.64
+      }
+    ],
+    "space": [],
+    "weight": [
+      {
+        "param": "rate",
+        "outLo": 0.1,
+        "outHi": 5,
+        "curve": "lin",
+        "weight": 0.411,
+        "confidence": 0.58
+      },
+      {
+        "param": "voice",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.589,
+        "confidence": 0.83
+      }
+    ],
+    "attack": [
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 1.0
+      }
+    ],
+    "pitch_controls": [],
+    "needs_review": []
+  },
+  "superchip": {
+    "brightness": [
+      {
+        "param": "pitch3",
+        "outLo": 1,
+        "outHi": 5,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.7
+      }
+    ],
+    "warmth": [],
+    "texture": [],
+    "movement": [
+      {
+        "param": "pitch3",
+        "outLo": 1,
+        "outHi": 5,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.7
+      }
+    ],
+    "space": [],
+    "weight": [
+      {
+        "param": "pitch3",
+        "outLo": 5,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.44
+      }
+    ],
+    "attack": [],
+    "pitch_controls": [
+      {
+        "param": "pitch2",
+        "drift_semitones": 12.9
+      },
+      {
+        "param": "slide",
+        "drift_semitones": 33.7
+      },
+      {
+        "param": "voice",
+        "drift_semitones": 19.1
+      }
+    ],
+    "needs_review": []
+  },
+  "superclap": {
+    "brightness": [
+      {
+        "param": "delay",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.322,
+        "confidence": 0.84
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0.5,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.368,
+        "confidence": 0.96
+      },
+      {
+        "param": "rate",
+        "outLo": 5,
+        "outHi": 0.1,
+        "curve": "lin",
+        "weight": 0.31,
+        "confidence": 0.81
+      }
+    ],
+    "warmth": [
+      {
+        "param": "delay",
+        "outLo": 3,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.426,
+        "confidence": 0.69
+      },
+      {
+        "param": "pitch1",
+        "outLo": 3,
+        "outHi": 0.5,
+        "curve": "lin",
+        "weight": 0.574,
+        "confidence": 0.93
+      }
+    ],
+    "texture": [
+      {
+        "param": "delay",
+        "outLo": 3,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.354,
+        "confidence": 0.86
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0.5,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.3,
+        "confidence": 0.73
+      },
+      {
+        "param": "rate",
+        "outLo": 0.1,
+        "outHi": 5,
+        "curve": "lin",
+        "weight": 0.346,
+        "confidence": 0.84
+      }
+    ],
+    "movement": [
+      {
+        "param": "delay",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.289,
+        "confidence": 0.72
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0.5,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.378,
+        "confidence": 0.94
+      },
+      {
+        "param": "rate",
+        "outLo": 5,
+        "outHi": 0.1,
+        "curve": "lin",
+        "weight": 0.333,
+        "confidence": 0.83
+      }
+    ],
+    "space": [],
+    "weight": [
+      {
+        "param": "pitch1",
+        "outLo": 3,
+        "outHi": 0.5,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.66
+      }
+    ],
+    "attack": [
+      {
+        "param": "delay",
+        "outLo": 3,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.255,
+        "confidence": 0.83
+      },
+      {
+        "param": "delay",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.215,
+        "confidence": 0.7
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0.5,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.255,
+        "confidence": 0.83
+      },
+      {
+        "param": "rate",
+        "outLo": 0.1,
+        "outHi": 5,
+        "curve": "lin",
+        "weight": 0.276,
+        "confidence": 0.9
+      }
+    ],
+    "pitch_controls": [],
+    "needs_review": []
+  },
+  "supercomparator": {
+    "brightness": [
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.372,
+        "confidence": 0.99
+      },
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.274,
+        "confidence": 0.73
+      },
+      {
+        "param": "voice",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.353,
+        "confidence": 0.94
+      }
+    ],
+    "warmth": [
+      {
+        "param": "voice",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.93
+      }
+    ],
+    "texture": [],
+    "movement": [
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.53,
+        "confidence": 0.96
+      },
+      {
+        "param": "voice",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.47,
+        "confidence": 0.85
+      }
+    ],
+    "space": [
+      {
+        "param": "lfo",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.251,
+        "confidence": 0.54
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.312,
+        "confidence": 0.67
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.437,
+        "confidence": 0.94
+      }
+    ],
+    "weight": [
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.93
+      }
+    ],
+    "attack": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 2,
+        "curve": "lin",
+        "weight": 0.19,
+        "confidence": 0.7
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.26,
+        "confidence": 0.96
+      },
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.16,
+        "confidence": 0.59
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.201,
+        "confidence": 0.74
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.19,
+        "confidence": 0.7
+      }
+    ],
+    "pitch_controls": [
+      {
+        "param": "resonance",
+        "drift_semitones": 24.2
+      }
+    ],
+    "needs_review": []
+  },
+  "supergong": {
+    "brightness": [
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.99
+      }
+    ],
+    "warmth": [
+      {
+        "param": "voice",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.98
+      }
+    ],
+    "texture": [],
+    "movement": [
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.98
+      }
+    ],
+    "space": [],
+    "weight": [
+      {
+        "param": "voice",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.94
+      }
+    ],
+    "attack": [
+      {
+        "param": "voice",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.64
+      }
+    ],
+    "pitch_controls": [
+      {
+        "param": "decay",
+        "drift_semitones": 12.5
+      }
+    ],
+    "needs_review": []
+  },
+  "supergrind": {
+    "brightness": [
+      {
+        "param": "detune",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.259,
+        "confidence": 0.6
+      },
+      {
+        "param": "rate",
+        "outLo": 5,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.379,
+        "confidence": 0.88
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.362,
+        "confidence": 0.84
+      }
+    ],
+    "warmth": [
+      {
+        "param": "detune",
+        "outLo": 10,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.41,
+        "confidence": 0.8
+      },
+      {
+        "param": "rate",
+        "outLo": 5,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.303,
+        "confidence": 0.59
+      },
+      {
+        "param": "voice",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.287,
+        "confidence": 0.56
+      }
+    ],
+    "texture": [
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 5,
+        "curve": "lin",
+        "weight": 0.511,
+        "confidence": 0.89
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.489,
+        "confidence": 0.85
+      }
+    ],
+    "movement": [
+      {
+        "param": "detune",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.253,
+        "confidence": 0.59
+      },
+      {
+        "param": "rate",
+        "outLo": 5,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.378,
+        "confidence": 0.88
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.369,
+        "confidence": 0.86
+      }
+    ],
+    "space": [
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 5,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.69
+      }
+    ],
+    "weight": [
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 5,
+        "curve": "lin",
+        "weight": 0.682,
+        "confidence": 0.88
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.318,
+        "confidence": 0.41
+      }
+    ],
+    "attack": [
+      {
+        "param": "detune",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.482,
+        "confidence": 0.68
+      },
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 5,
+        "curve": "lin",
+        "weight": 0.518,
+        "confidence": 0.73
+      }
+    ],
+    "pitch_controls": [],
+    "needs_review": []
+  },
+  "superhammond": {
+    "brightness": [
+      {
+        "param": "perc",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.398,
+        "confidence": 0.86
+      },
+      {
+        "param": "vibrato",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.403,
+        "confidence": 0.87
+      },
+      {
+        "param": "vrate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.199,
+        "confidence": 0.43
+      }
+    ],
+    "warmth": [
+      {
+        "param": "perc",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.274,
+        "confidence": 0.83
+      },
+      {
+        "param": "percf",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.188,
+        "confidence": 0.57
+      },
+      {
+        "param": "vibrato",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.317,
+        "confidence": 0.96
+      },
+      {
+        "param": "vrate",
+        "outLo": 10,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.221,
+        "confidence": 0.67
+      }
+    ],
+    "texture": [
+      {
+        "param": "perc",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.85
+      }
+    ],
+    "movement": [
+      {
+        "param": "perc",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.85
+      }
+    ],
+    "space": [],
+    "weight": [
+      {
+        "param": "perc",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.275,
+        "confidence": 0.83
+      },
+      {
+        "param": "percf",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.185,
+        "confidence": 0.56
+      },
+      {
+        "param": "vibrato",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.318,
+        "confidence": 0.96
+      },
+      {
+        "param": "vrate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.222,
+        "confidence": 0.67
+      }
+    ],
+    "attack": [
+      {
+        "param": "decay",
+        "outLo": 2,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.162,
+        "confidence": 0.43
+      },
+      {
+        "param": "perc",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.312,
+        "confidence": 0.83
+      },
+      {
+        "param": "perc",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.263,
+        "confidence": 0.7
+      },
+      {
+        "param": "vrate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.263,
+        "confidence": 0.7
+      }
+    ],
+    "pitch_controls": [
+      {
+        "param": "voice",
+        "drift_semitones": 12.1
+      }
+    ],
+    "needs_review": []
+  },
+  "superhex": {
+    "brightness": [
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.88
+      }
+    ],
+    "warmth": [
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.97
+      }
+    ],
+    "texture": [
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.96
+      }
+    ],
+    "movement": [
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.91
+      }
+    ],
+    "space": [],
+    "weight": [
+      {
+        "param": "rate",
+        "outLo": 10,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.97
+      }
+    ],
+    "attack": [],
+    "pitch_controls": [],
+    "needs_review": []
+  },
+  "superhoover": {
+    "brightness": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.5
+      }
+    ],
+    "warmth": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.89
+      }
+    ],
+    "texture": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.5
+      }
+    ],
+    "movement": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.5
+      }
+    ],
+    "space": [
+      {
+        "param": "decay",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.64
+      }
+    ],
+    "weight": [
+      {
+        "param": "decay",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.89
+      }
+    ],
+    "attack": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.7
+      }
+    ],
+    "pitch_controls": [
+      {
+        "param": "slide",
+        "drift_semitones": 3.2
+      }
+    ],
+    "needs_review": []
+  },
+  "superkick": {
+    "brightness": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 2,
+        "curve": "lin",
+        "weight": 0.482,
+        "confidence": 0.92
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.518,
+        "confidence": 0.99
+      }
+    ],
+    "warmth": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 2,
+        "curve": "lin",
+        "weight": 0.56,
+        "confidence": 0.98
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.44,
+        "confidence": 0.77
+      }
+    ],
+    "texture": [
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.75
+      }
+    ],
+    "movement": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 2,
+        "curve": "lin",
+        "weight": 0.462,
+        "confidence": 0.85
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.538,
+        "confidence": 0.99
+      }
+    ],
+    "space": [],
+    "weight": [
+      {
+        "param": "decay",
+        "outLo": 2,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.5,
+        "confidence": 0.98
+      },
+      {
+        "param": "pitch1",
+        "outLo": 3,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.5,
+        "confidence": 0.98
+      }
+    ],
+    "attack": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 2,
+        "curve": "lin",
+        "weight": 0.446,
+        "confidence": 0.75
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.554,
+        "confidence": 0.93
+      }
+    ],
+    "pitch_controls": [],
+    "needs_review": []
+  },
+  "supermandolin": {
+    "brightness": [
+      {
+        "param": "detune",
+        "outLo": 0.5,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.81
+      }
+    ],
+    "warmth": [
+      {
+        "param": "detune",
+        "outLo": 0,
+        "outHi": 0.5,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.97
+      }
+    ],
+    "texture": [
+      {
+        "param": "detune",
+        "outLo": 0,
+        "outHi": 0.5,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.99
+      }
+    ],
+    "movement": [
+      {
+        "param": "detune",
+        "outLo": 0.5,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.83
+      }
+    ],
+    "space": [],
+    "weight": [
+      {
+        "param": "detune",
+        "outLo": 0,
+        "outHi": 0.5,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 1.0
+      }
+    ],
+    "attack": [],
+    "pitch_controls": [],
+    "needs_review": []
+  },
+  "supernoise": {
+    "brightness": [
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.202,
+        "confidence": 0.82
+      },
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.101,
+        "confidence": 0.41
+      },
+      {
+        "param": "resonance",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.222,
+        "confidence": 0.9
+      },
+      {
+        "param": "slide",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.23,
+        "confidence": 0.93
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.244,
+        "confidence": 0.99
+      }
+    ],
+    "warmth": [
+      {
+        "param": "pitch1",
+        "outLo": 3,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.232,
+        "confidence": 0.7
+      },
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.175,
+        "confidence": 0.53
+      },
+      {
+        "param": "resonance",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.272,
+        "confidence": 0.82
+      },
+      {
+        "param": "voice",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.321,
+        "confidence": 0.97
+      }
+    ],
+    "texture": [
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.232,
+        "confidence": 0.86
+      },
+      {
+        "param": "resonance",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.253,
+        "confidence": 0.94
+      },
+      {
+        "param": "slide",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.251,
+        "confidence": 0.93
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.264,
+        "confidence": 0.98
+      }
+    ],
+    "movement": [
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.224,
+        "confidence": 0.81
+      },
+      {
+        "param": "resonance",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.246,
+        "confidence": 0.89
+      },
+      {
+        "param": "slide",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.257,
+        "confidence": 0.93
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.273,
+        "confidence": 0.99
+      }
+    ],
+    "space": [],
+    "weight": [
+      {
+        "param": "pitch1",
+        "outLo": 3,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.184,
+        "confidence": 0.52
+      },
+      {
+        "param": "rate",
+        "outLo": 10,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.195,
+        "confidence": 0.55
+      },
+      {
+        "param": "resonance",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.27,
+        "confidence": 0.76
+      },
+      {
+        "param": "voice",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.351,
+        "confidence": 0.99
+      }
+    ],
+    "attack": [
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.087,
+        "confidence": 0.51
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.12,
+        "confidence": 0.7
+      },
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.12,
+        "confidence": 0.7
+      },
+      {
+        "param": "resonance",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.146,
+        "confidence": 0.85
+      },
+      {
+        "param": "resonance",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.12,
+        "confidence": 0.7
+      },
+      {
+        "param": "slide",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.12,
+        "confidence": 0.7
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.166,
+        "confidence": 0.97
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.12,
+        "confidence": 0.7
+      }
+    ],
+    "pitch_controls": [
+      {
+        "param": "voice",
+        "drift_semitones": 1.2
+      }
+    ],
+    "needs_review": []
+  },
+  "superpiano": {
+    "brightness": [
+      {
+        "param": "muffle",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.508,
+        "confidence": 0.94
+      },
+      {
+        "param": "velocity",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.492,
+        "confidence": 0.91
+      }
+    ],
+    "warmth": [
+      {
+        "param": "muffle",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.505,
+        "confidence": 0.96
+      },
+      {
+        "param": "velocity",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.495,
+        "confidence": 0.94
+      }
+    ],
+    "texture": [
+      {
+        "param": "muffle",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.228,
+        "confidence": 0.51
+      },
+      {
+        "param": "stereo",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.375,
+        "confidence": 0.84
+      },
+      {
+        "param": "velocity",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.397,
+        "confidence": 0.89
+      }
+    ],
+    "movement": [
+      {
+        "param": "muffle",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.492,
+        "confidence": 0.89
+      },
+      {
+        "param": "velocity",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.508,
+        "confidence": 0.92
+      }
+    ],
+    "space": [
+      {
+        "param": "muffle",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.338,
+        "confidence": 0.96
+      },
+      {
+        "param": "stereo",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.331,
+        "confidence": 0.94
+      },
+      {
+        "param": "velocity",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.331,
+        "confidence": 0.94
+      }
+    ],
+    "weight": [
+      {
+        "param": "muffle",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.508,
+        "confidence": 0.96
+      },
+      {
+        "param": "velocity",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.492,
+        "confidence": 0.93
+      }
+    ],
+    "attack": [
+      {
+        "param": "muffle",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.444,
+        "confidence": 0.55
+      },
+      {
+        "param": "velocity",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.556,
+        "confidence": 0.69
+      }
+    ],
+    "pitch_controls": [],
+    "needs_review": [
+      "stereo -> brightness (confidence 0.02)"
+    ]
+  },
+  "superprimes": {
+    "brightness": [
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.99
+      }
+    ],
+    "warmth": [],
+    "texture": [
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.68
+      }
+    ],
+    "movement": [
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.99
+      }
+    ],
+    "space": [
+      {
+        "param": "rate",
+        "outLo": 10,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.83
+      }
+    ],
+    "weight": [],
+    "attack": [
+      {
+        "param": "rate",
+        "outLo": 10,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.214,
+        "confidence": 0.56
+      },
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.267,
+        "confidence": 0.7
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.252,
+        "confidence": 0.66
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.267,
+        "confidence": 0.7
+      }
+    ],
+    "pitch_controls": [
+      {
+        "param": "detune",
+        "drift_semitones": 13.1
+      }
+    ],
+    "needs_review": []
+  },
+  "superpwm": {
+    "brightness": [
+      {
+        "param": "lfo",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.379,
+        "confidence": 1.0
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.379,
+        "confidence": 1.0
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.242,
+        "confidence": 0.64
+      }
+    ],
+    "warmth": [
+      {
+        "param": "pitch1",
+        "outLo": 3,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.595,
+        "confidence": 0.91
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.405,
+        "confidence": 0.62
+      }
+    ],
+    "texture": [
+      {
+        "param": "lfo",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.49
+      }
+    ],
+    "movement": [
+      {
+        "param": "lfo",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.373,
+        "confidence": 1.0
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.373,
+        "confidence": 1.0
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.254,
+        "confidence": 0.68
+      }
+    ],
+    "space": [],
+    "weight": [
+      {
+        "param": "lfo",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.233,
+        "confidence": 0.45
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.43,
+        "confidence": 0.83
+      },
+      {
+        "param": "voice",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.337,
+        "confidence": 0.65
+      }
+    ],
+    "attack": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 2,
+        "curve": "lin",
+        "weight": 0.224,
+        "confidence": 0.7
+      },
+      {
+        "param": "lfo",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.137,
+        "confidence": 0.43
+      },
+      {
+        "param": "lfo",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.224,
+        "confidence": 0.7
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.284,
+        "confidence": 0.89
+      },
+      {
+        "param": "voice",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.131,
+        "confidence": 0.41
+      }
+    ],
+    "pitch_controls": [
+      {
+        "param": "rate",
+        "drift_semitones": 12.1
+      },
+      {
+        "param": "resonance",
+        "drift_semitones": 6.7
+      },
+      {
+        "param": "semitone",
+        "drift_semitones": 24.0
+      }
+    ],
+    "needs_review": []
+  },
+  "superreese": {
+    "brightness": [
+      {
+        "param": "detune",
+        "outLo": 5,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.86
+      }
+    ],
+    "warmth": [
+      {
+        "param": "detune",
+        "outLo": 0,
+        "outHi": 5,
+        "curve": "lin",
+        "weight": 0.531,
+        "confidence": 0.94
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 2,
+        "curve": "lin",
+        "weight": 0.469,
+        "confidence": 0.83
+      }
+    ],
+    "texture": [],
+    "movement": [
+      {
+        "param": "detune",
+        "outLo": 5,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.85
+      }
+    ],
+    "space": [
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 2,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.98
+      }
+    ],
+    "weight": [
+      {
+        "param": "detune",
+        "outLo": 5,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.92
+      }
+    ],
+    "attack": [
+      {
+        "param": "detune",
+        "outLo": 0,
+        "outHi": 5,
+        "curve": "lin",
+        "weight": 0.263,
+        "confidence": 0.72
+      },
+      {
+        "param": "detune",
+        "outLo": 0,
+        "outHi": 5,
+        "curve": "lin",
+        "weight": 0.255,
+        "confidence": 0.7
+      },
+      {
+        "param": "voice",
+        "outLo": 2,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.226,
+        "confidence": 0.62
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 2,
+        "curve": "lin",
+        "weight": 0.255,
+        "confidence": 0.7
+      }
+    ],
+    "pitch_controls": [],
+    "needs_review": [
+      "voice -> brightness (confidence 0.2)"
+    ]
+  },
+  "supersaw": {
+    "brightness": [
+      {
+        "param": "lfo",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.33,
+        "confidence": 1.0
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.33,
+        "confidence": 1.0
+      },
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.185,
+        "confidence": 0.56
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.155,
+        "confidence": 0.47
+      }
+    ],
+    "warmth": [
+      {
+        "param": "decay",
+        "outLo": 2,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.207,
+        "confidence": 0.78
+      },
+      {
+        "param": "lfo",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.263,
+        "confidence": 0.99
+      },
+      {
+        "param": "pitch1",
+        "outLo": 3,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.237,
+        "confidence": 0.89
+      },
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.144,
+        "confidence": 0.54
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.149,
+        "confidence": 0.56
+      }
+    ],
+    "texture": [
+      {
+        "param": "lfo",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.207,
+        "confidence": 0.47
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.379,
+        "confidence": 0.86
+      },
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.22,
+        "confidence": 0.5
+      },
+      {
+        "param": "voice",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.194,
+        "confidence": 0.44
+      }
+    ],
+    "movement": [
+      {
+        "param": "lfo",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.342,
+        "confidence": 1.0
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.342,
+        "confidence": 1.0
+      },
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.171,
+        "confidence": 0.5
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.144,
+        "confidence": 0.42
+      }
+    ],
+    "space": [],
+    "weight": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 2,
+        "curve": "lin",
+        "weight": 0.204,
+        "confidence": 0.78
+      },
+      {
+        "param": "lfo",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.23,
+        "confidence": 0.88
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.243,
+        "confidence": 0.93
+      },
+      {
+        "param": "rate",
+        "outLo": 10,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.183,
+        "confidence": 0.7
+      },
+      {
+        "param": "voice",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.141,
+        "confidence": 0.54
+      }
+    ],
+    "attack": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 2,
+        "curve": "lin",
+        "weight": 0.172,
+        "confidence": 0.7
+      },
+      {
+        "param": "lfo",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.23,
+        "confidence": 0.94
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.208,
+        "confidence": 0.85
+      },
+      {
+        "param": "voice",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.218,
+        "confidence": 0.89
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.172,
+        "confidence": 0.7
+      }
+    ],
+    "pitch_controls": [
+      {
+        "param": "resonance",
+        "drift_semitones": 32.0
+      },
+      {
+        "param": "semitone",
+        "drift_semitones": 25.7
+      }
+    ],
+    "needs_review": [
+      "decay -> brightness (confidence 0.0)"
+    ]
+  },
+  "supersnare": {
+    "brightness": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 2,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.99
+      }
+    ],
+    "warmth": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 2,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.98
+      }
+    ],
+    "texture": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 2,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.91
+      }
+    ],
+    "movement": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 2,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.98
+      }
+    ],
+    "space": [],
+    "weight": [
+      {
+        "param": "decay",
+        "outLo": 2,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.98
+      }
+    ],
+    "attack": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 2,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.58
+      }
+    ],
+    "pitch_controls": [],
+    "needs_review": []
+  },
+  "supersquare": {
+    "brightness": [
+      {
+        "param": "lfo",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.334,
+        "confidence": 1.0
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.334,
+        "confidence": 1.0
+      },
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.331,
+        "confidence": 0.99
+      }
+    ],
+    "warmth": [
+      {
+        "param": "lfo",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.559,
+        "confidence": 1.0
+      },
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.441,
+        "confidence": 0.79
+      }
+    ],
+    "texture": [
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.619,
+        "confidence": 0.86
+      },
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.381,
+        "confidence": 0.53
+      }
+    ],
+    "movement": [
+      {
+        "param": "lfo",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.334,
+        "confidence": 1.0
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.334,
+        "confidence": 1.0
+      },
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.331,
+        "confidence": 0.99
+      }
+    ],
+    "space": [],
+    "weight": [
+      {
+        "param": "lfo",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.59,
+        "confidence": 0.98
+      },
+      {
+        "param": "pitch1",
+        "outLo": 3,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.41,
+        "confidence": 0.68
+      }
+    ],
+    "attack": [
+      {
+        "param": "lfo",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.176,
+        "confidence": 0.98
+      },
+      {
+        "param": "lfo",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.125,
+        "confidence": 0.7
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.161,
+        "confidence": 0.9
+      },
+      {
+        "param": "pitch1",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.125,
+        "confidence": 0.7
+      },
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.161,
+        "confidence": 0.9
+      },
+      {
+        "param": "rate",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.125,
+        "confidence": 0.7
+      },
+      {
+        "param": "voice",
+        "outLo": 0.01,
+        "outHi": 0.99,
+        "curve": "lin",
+        "weight": 0.125,
+        "confidence": 0.7
+      }
+    ],
+    "pitch_controls": [
+      {
+        "param": "decay",
+        "drift_semitones": 10.1
+      },
+      {
+        "param": "resonance",
+        "drift_semitones": 43.3
+      },
+      {
+        "param": "semitone",
+        "drift_semitones": 19.1
+      }
+    ],
+    "needs_review": []
+  },
+  "supertron": {
+    "brightness": [
+      {
+        "param": "detune",
+        "outLo": 10,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.553,
+        "confidence": 0.94
+      },
+      {
+        "param": "voice",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.447,
+        "confidence": 0.76
+      }
+    ],
+    "warmth": [
+      {
+        "param": "detune",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.464,
+        "confidence": 0.85
+      },
+      {
+        "param": "voice",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.536,
+        "confidence": 0.98
+      }
+    ],
+    "texture": [
+      {
+        "param": "detune",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.484,
+        "confidence": 0.92
+      },
+      {
+        "param": "voice",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.516,
+        "confidence": 0.98
+      }
+    ],
+    "movement": [
+      {
+        "param": "detune",
+        "outLo": 10,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.538,
+        "confidence": 0.93
+      },
+      {
+        "param": "voice",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.462,
+        "confidence": 0.8
+      }
+    ],
+    "space": [],
+    "weight": [
+      {
+        "param": "detune",
+        "outLo": 10,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.443,
+        "confidence": 0.77
+      },
+      {
+        "param": "voice",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.557,
+        "confidence": 0.97
+      }
+    ],
+    "attack": [
+      {
+        "param": "detune",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.573,
+        "confidence": 0.94
+      },
+      {
+        "param": "detune",
+        "outLo": 0,
+        "outHi": 10,
+        "curve": "lin",
+        "weight": 0.427,
+        "confidence": 0.7
+      }
+    ],
+    "pitch_controls": [],
+    "needs_review": []
+  },
+  "supervibe": {
+    "brightness": [
+      {
+        "param": "decay",
+        "outLo": 2,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.222,
+        "confidence": 0.93
+      },
+      {
+        "param": "detune",
+        "outLo": 0,
+        "outHi": 0.5,
+        "curve": "lin",
+        "weight": 0.175,
+        "confidence": 0.73
+      },
+      {
+        "param": "modamp",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.211,
+        "confidence": 0.88
+      },
+      {
+        "param": "modfreq",
+        "outLo": 20,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.156,
+        "confidence": 0.65
+      },
+      {
+        "param": "velocity",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.237,
+        "confidence": 0.99
+      }
+    ],
+    "warmth": [
+      {
+        "param": "decay",
+        "outLo": 2,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.283,
+        "confidence": 0.99
+      },
+      {
+        "param": "modamp",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.283,
+        "confidence": 0.99
+      },
+      {
+        "param": "modfreq",
+        "outLo": 20,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.151,
+        "confidence": 0.53
+      },
+      {
+        "param": "velocity",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.283,
+        "confidence": 0.99
+      }
+    ],
+    "texture": [
+      {
+        "param": "decay",
+        "outLo": 2,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.304,
+        "confidence": 0.49
+      },
+      {
+        "param": "detune",
+        "outLo": 0,
+        "outHi": 0.5,
+        "curve": "lin",
+        "weight": 0.323,
+        "confidence": 0.52
+      },
+      {
+        "param": "velocity",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.373,
+        "confidence": 0.6
+      }
+    ],
+    "movement": [
+      {
+        "param": "decay",
+        "outLo": 2,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.377,
+        "confidence": 0.95
+      },
+      {
+        "param": "detune",
+        "outLo": 0,
+        "outHi": 0.5,
+        "curve": "lin",
+        "weight": 0.238,
+        "confidence": 0.6
+      },
+      {
+        "param": "velocity",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.385,
+        "confidence": 0.97
+      }
+    ],
+    "space": [],
+    "weight": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 2,
+        "curve": "lin",
+        "weight": 0.281,
+        "confidence": 0.99
+      },
+      {
+        "param": "modamp",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.284,
+        "confidence": 1.0
+      },
+      {
+        "param": "modfreq",
+        "outLo": 0,
+        "outHi": 20,
+        "curve": "lin",
+        "weight": 0.153,
+        "confidence": 0.54
+      },
+      {
+        "param": "velocity",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.281,
+        "confidence": 0.99
+      }
+    ],
+    "attack": [
+      {
+        "param": "velocity",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.8
+      }
+    ],
+    "pitch_controls": [],
+    "needs_review": []
+  },
+  "superwavemechanics": {
+    "brightness": [],
+    "warmth": [],
+    "texture": [],
+    "movement": [],
+    "space": [],
+    "weight": [],
+    "attack": [],
+    "pitch_controls": [
+      {
+        "param": "detune",
+        "drift_semitones": 41.8
+      },
+      {
+        "param": "resonance",
+        "drift_semitones": 50.8
+      },
+      {
+        "param": "voice",
+        "drift_semitones": 39.7
+      }
+    ],
+    "needs_review": []
+  },
+  "superzow": {
+    "brightness": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.352,
+        "confidence": 0.5
+      },
+      {
+        "param": "slide",
+        "outLo": 5,
+        "outHi": 0.1,
+        "curve": "lin",
+        "weight": 0.648,
+        "confidence": 0.92
+      }
+    ],
+    "warmth": [
+      {
+        "param": "decay",
+        "outLo": 1,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.667,
+        "confidence": 0.9
+      },
+      {
+        "param": "detune",
+        "outLo": 3,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.333,
+        "confidence": 0.45
+      }
+    ],
+    "texture": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.238,
+        "confidence": 0.5
+      },
+      {
+        "param": "detune",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.405,
+        "confidence": 0.85
+      },
+      {
+        "param": "slide",
+        "outLo": 5,
+        "outHi": 0.1,
+        "curve": "lin",
+        "weight": 0.357,
+        "confidence": 0.75
+      }
+    ],
+    "movement": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.217,
+        "confidence": 0.48
+      },
+      {
+        "param": "detune",
+        "outLo": 3,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 0.357,
+        "confidence": 0.79
+      },
+      {
+        "param": "slide",
+        "outLo": 5,
+        "outHi": 0.1,
+        "curve": "lin",
+        "weight": 0.425,
+        "confidence": 0.94
+      }
+    ],
+    "space": [],
+    "weight": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.312,
+        "confidence": 0.63
+      },
+      {
+        "param": "detune",
+        "outLo": 0,
+        "outHi": 3,
+        "curve": "lin",
+        "weight": 0.218,
+        "confidence": 0.44
+      },
+      {
+        "param": "slide",
+        "outLo": 0.1,
+        "outHi": 5,
+        "curve": "lin",
+        "weight": 0.47,
+        "confidence": 0.95
+      }
+    ],
+    "attack": [
+      {
+        "param": "decay",
+        "outLo": 0,
+        "outHi": 1,
+        "curve": "lin",
+        "weight": 0.357,
+        "confidence": 0.7
+      },
+      {
+        "param": "slide",
+        "outLo": 5,
+        "outHi": 0.1,
+        "curve": "lin",
+        "weight": 0.286,
+        "confidence": 0.56
+      },
+      {
+        "param": "slide",
+        "outLo": 0.1,
+        "outHi": 5,
+        "curve": "lin",
+        "weight": 0.357,
+        "confidence": 0.7
+      }
+    ],
+    "pitch_controls": [],
+    "needs_review": []
+  }
+}
