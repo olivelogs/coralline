@@ -10,7 +10,10 @@ tidal/
 .vscode/
 scd/docs/
 archive/
+skills/
 quarks/ChimeSemantics/Data/probes
+quarks/ChimeSemantics/Data/qwen_chunks
+quarks/ChimeSemantics/Data/qwen
 
 # specific files
 chime/package-lock.json
