@@ -17,7 +17,7 @@ or via the menu File > Open startup file
 s.reboot { // server options are only updated on reboot
 	// configure the sound server: here you could add hardware specific options
 	// see http://doc.sccode.org/Classes/ServerOptions.html
-	s.options.outDevice = "MacBook Air Speakers"; // or whatever it’s called in your list
+	s.options.outDevice = "External Headphones"; // or whatever it’s called in your list
 	s.options.sampleRate = 44100;
 	s.options.numBuffers = 1024 * 256; // increase this if you need to load more samples
 	s.options.hardwareBufferSize = 512;
