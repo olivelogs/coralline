@@ -22,7 +22,7 @@ s.reboot { // server options are only updated on reboot
 	s.options.numBuffers = 1024 * 256; // increase this if you need to load more samples
 	s.options.hardwareBufferSize = 512;
 	s.options.blockSize = 64;
-	s.options.memSize = 8192 * 8; // increase this if you get "alloc failed" messages
+	s.options.memSize = 9216 * 8; // increase this if you get "alloc failed" messages
 	s.options.numWireBufs = 128; // increase this if you get "exceeded number of interconnect buffers" messages
 	s.options.maxNodes = 1024; // increase this if you are getting drop outs and the message "too many nodes"
 	s.options.numOutputBusChannels = 2; // set this to your hardware output channel size, if necessary
@@ -38,6 +38,9 @@ s.reboot { // server options are only updated on reboot
 		~dirt.start(57120, 0 ! 12);   // start listening on port 57120, create two busses each sending audio to channel 0
 		SuperDirt.default = ~dirt; // make this instance available in sclang (optional)
 		"SuperDirt running.".postln;
+		ChimeSemantics.loadRefined;   // reads refined_mappings.json, replaces all mappings
+		ChimeSemantics.summary;        // see what loaded
+		ChimeAgent.start;
 		// optional, needed for convenient access from sclang:
 		// (
 			//~d1 = ~dirt.orbits[0]; ~d2 = ~dirt.orbits[1]; ~d3 = ~dirt.orbits[2];
