@@ -16,6 +16,8 @@
 //      n 0 = C5 (middle C), n -12 = C4, n 12 = C6
 //      To convert from MIDI: n = midinote - 60
 //
+//    If using batch_send_osc, leave type_tags blank for auto-detect.
+//
 //    Setup:
 //        // After SuperDirt is running:
 //        ChimeAgent.start;
@@ -130,6 +132,19 @@ ChimeAgent {
             }, '/chime/loop/stop')
         );
 
+		// ==========================================
+        // /chime/phrase — One-shot phrase with gradient
+        // ==========================================
+        // /chime/phrase synthName "0 3 7" 0.5 [dim1 val1 [val2]] ... [| raw1 val1 [val2] ...]
+        // One value after a key = blanket for all notes
+        // Two values after a key = gradient (start → end) interpolated across phrase
+        // dur is seconds per note
+        oscResponders = oscResponders.add(
+            OSCdef(\chimePhrase, { |msg, time, addr, recvPort|
+                this.handlePhrase(msg);
+            }, '/chime/phrase')
+        );
+		
         // ==========================================
         // /chime/ping/state — Request current state
         // ==========================================
@@ -330,6 +345,158 @@ ChimeAgent {
             "ChimeAgent: no loop named '%'".format(loopName).warn;
         };
     }
+	
+	// ---- Phrase handler ----
+
+    *handlePhrase { |msg|
+        // msg: ['/chime/phrase', synthName, notePattern, durPerNote, ...params...]
+        var synthName, noteStr, durPerNote, notes, numNotes;
+        var semGradients, rawGradients, pipeIdx;
+        var paramRange;
+
+        if(msg.size < 4) {
+            "ChimeAgent: /chime/phrase needs synthName, notePattern, durPerNote".warn;
+            ^this
+        };
+
+        synthName = msg[1].asSymbol;
+        noteStr = msg[2].asString;
+        durPerNote = msg[3].asFloat;
+
+        notes = noteStr.split($ ).collect(_.asFloat);
+        numNotes = notes.size;
+
+        if(numNotes == 0) {
+            "ChimeAgent: empty note pattern".warn;
+            ^this
+        };
+
+        // Find pipe separator
+        pipeIdx = nil;
+        (4..msg.size-1).do { |i|
+            if(msg[i].asString == "|") { pipeIdx = i };
+        };
+
+        // Parse gradient params from semantic section
+        semGradients = if(pipeIdx.notNil) {
+            this.prParseGradientParams(msg, 4, pipeIdx - 1);
+        } {
+            this.prParseGradientParams(msg, 4, msg.size - 1);
+        };
+
+        // Parse gradient params from raw section (after pipe)
+        rawGradients = if(pipeIdx.notNil) {
+            this.prParseGradientParams(msg, pipeIdx + 1, msg.size - 1);
+        } {
+            IdentityDictionary.new
+        };
+
+        // Schedule the phrase in a Routine (SC-side timing)
+        fork {
+            notes.do { |note, idx|
+                var t, semantics, rawParams, resolved, args;
+
+                // Interpolation position: 0.0 for first note, 1.0 for last
+                t = if(numNotes > 1) { idx / (numNotes - 1) } { 0.0 };
+
+                // Interpolate semantic gradients at position t
+                semantics = this.prInterpolateGradients(semGradients, t);
+
+                // Resolve through ChimeSemantics
+                resolved = if(semantics.size > 0) {
+                    ChimeSemantics.resolveAll(synthName, semantics);
+                } { () };
+
+                // Interpolate raw gradients at position t
+                rawParams = this.prInterpolateGradients(rawGradients, t);
+
+                // Build SuperDirt args
+                args = ["s", synthName.asString, "n", note];
+
+                resolved.keysValuesDo { |param, val|
+                    args = args ++ [param.asString, val];
+                };
+
+                rawParams.keysValuesDo { |param, val|
+                    args = args ++ [param.asString, val];
+                };
+
+                if(resolved[\gain].isNil and: { rawParams[\gain].isNil }) {
+                    args = args ++ ["gain", 1.0];
+                };
+
+                args = args ++ ["orbit", 0];
+
+                this.sendToDirt(args);
+
+                // Wait before next note (except after last)
+                if(idx < (numNotes - 1)) {
+                    durPerNote.wait;
+                };
+            };
+
+            "ChimeAgent: phrase complete — % % notes, %s/note".format(
+                synthName, numNotes, durPerNote
+            ).postln;
+        };
+
+        "ChimeAgent: phrase started — % % notes, %s/note sem:% raw:%".format(
+            synthName, numNotes, durPerNote, semGradients.keys, rawGradients.keys
+        ).postln;
+    }
+
+    // Parse key-value pairs where each key may have 1 value (blanket) or 2 (gradient).
+    // Returns IdentityDictionary of key -> [values]
+    //   [0.5]     = blanket
+    //   [0.3, 0.8] = gradient from start to end
+    *prParseGradientParams { |msg, startIdx, endIdx|
+        var result = IdentityDictionary.new;
+        var i = startIdx;
+        var currentKey, values;
+
+        while { i <= endIdx } {
+            var item = msg[i];
+
+            if(item.isKindOf(String) or: { item.isKindOf(Symbol) }) {
+                // Save previous key if we had one
+                if(currentKey.notNil and: { values.size > 0 }) {
+                    result[currentKey] = values;
+                };
+                // Start new key
+                currentKey = item.asSymbol;
+                values = [];
+            } {
+                // It's a number — add to current key's values
+                if(currentKey.notNil) {
+                    values = values.add(item.asFloat);
+                };
+            };
+
+            i = i + 1;
+        };
+
+        // Don't forget the last key
+        if(currentKey.notNil and: { values.size > 0 }) {
+            result[currentKey] = values;
+        };
+
+        ^result
+    }
+
+    // Interpolate gradient params at position t (0.0–1.0).
+    // Returns IdentityDictionary of key -> interpolated value.
+    *prInterpolateGradients { |gradients, t|
+        var result = IdentityDictionary.new;
+
+        gradients.keysValuesDo { |key, values|
+            result[key] = case
+                { values.size == 1 } { values[0] }                          // blanket
+                { values.size >= 2 } { values[0].blend(values[1], t) }      // gradient
+                { true } { 0 };                                             // shouldn't happen
+        };
+
+        ^result
+    }
 
     // ---- Ping/Pong handlers ----
 
@@ -353,3 +520,4 @@ ChimeAgent {
         ^loops.keys.asArray
     }
 }
+        
