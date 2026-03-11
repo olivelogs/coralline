@@ -7,15 +7,32 @@
     All semantic values are normalized 0.0–1.0.
 
     Usage:
+        // After class library compiles, load the empirical mappings:
+        ChimeSemantics.loadRefined;
+
         // Resolve semantic params for a synth:
         ChimeSemantics.resolve(\supervibe, \brightness, 0.7);
-        // returns: [[\modfreq, 11.2], [\modamp, 0.21]]
+        // returns: [[\decay, 0.86], [\detune, 0.12], [\modamp, 0.15], ...]
 
         // Resolve a full set of semantic params:
         ChimeSemantics.resolveAll(\supervibe, (\brightness: 0.7, \warmth: 0.4));
-        // returns: (\modfreq: 11.2, \modamp: 0.21, \velocity: 0.58)
+        // returns: (\decay: 1.14, \modamp: 0.28, \velocity: 0.52, ...)
+
+        // List available synths:
+        ChimeSemantics.synths;
+
+        // See what a synth can do:
+        ChimeSemantics.dimensionsFor(\supervibe);
+
+        // Inspect full mapping:
+        ChimeSemantics.inspect(\supervibe);
+
+        // Check which params affect pitch (avoid for timbral work):
+        ChimeSemantics.pitchControlsFor(\superpwm);
 
     March 2026 — Olive + Claude
+    Empirical mappings: 322 timbral curves across 27 SuperDirt synths,
+    derived from probe sweeps + librosa analysis.
 */
 
 ChimeSemantics {
@@ -27,9 +44,20 @@ ChimeSemantics {
     // Class variable: the semantic vocabulary
     classvar <dimensions;
 
+    // Class variable: pitch controls per synth (params that drift pitch, not timbre)
+    classvar <pitchControls;
+
+    // Class variable: items flagged for human review
+    classvar <needsReview;
+
+    // Whether refined mappings have been loaded
+    classvar <refinedLoaded;
+
+    // Default path to refined mappings JSON
+    classvar <defaultRefinedPath;
+
     *initClass {
         // Define our semantic dimensions
-        // These are the "knobs" an agent can turn
         dimensions = #[
             \brightness,   // spectral energy distribution (dark ↔ bright)
             \warmth,       // harmonic richness, low-mid presence
@@ -37,99 +65,228 @@ ChimeSemantics {
             \movement,     // modulation rate, vibrato, LFO activity
             \space,        // stereo width, detuning spread
             \weight,       // low-frequency energy, body
-            \attack,       // onset sharpness (soft ↔ percussive)
+            \attack        // onset sharpness (soft ↔ percussive)
         ];
 
-        // Initialize empty mappings dictionary
+        // Initialize containers
         mappings = IdentityDictionary.new;
+        pitchControls = IdentityDictionary.new;
+        needsReview = IdentityDictionary.new;
+        refinedLoaded = false;
 
-        // Load hardcoded starter mappings
-        // (these will eventually come from Qwen's probing data)
+        // Default path — adjust if your quarks live elsewhere
+        defaultRefinedPath = (
+            Platform.userAppSupportDir +/+
+            "downloaded-quarks/ChimeSemantics/Data/refined_mappings.json"
+        );
+
+        // Load hardcoded fallback mappings
         this.loadDefaultMappings;
     }
 
+    // =========================================================
+    // JSON LOADING — the main event
+    // =========================================================
+
+    // Load refined empirical mappings from JSON.
+    // Replaces all existing mappings.
+    *loadRefined { |path|
+        path = path ?? { defaultRefinedPath };
+        this.loadFromJSON(path);
+    }
+
+    // Parse refined_mappings.json and populate all class variables.
+    *loadFromJSON { |path|
+        var file, jsonStr, data, synthCount = 0, curveCount = 0;
+
+        if(File.exists(path).not) {
+            "ChimeSemantics: refined mappings not found at '%'".format(path).warn;
+            "ChimeSemantics: using default mappings only.".postln;
+            ^this
+        };
+
+        // Read and parse
+        file = File.open(path, "r");
+        jsonStr = file.readAllString;
+        file.close;
+
+        data = jsonStr.parseYAML;
+
+        if(data.isNil) {
+            "ChimeSemantics: failed to parse JSON at '%'".format(path).warn;
+            ^this
+        };
+
+        // Clear existing mappings — empirical data replaces everything
+        mappings = IdentityDictionary.new;
+        pitchControls = IdentityDictionary.new;
+        needsReview = IdentityDictionary.new;
+
+        // Iterate synths
+        data.keysValuesDo { |synthNameStr, synthData|
+            var synthName = synthNameStr.asSymbol;
+            var synthMap = IdentityDictionary.new;
+            var hasTimbralMappings = false;
+
+            // Process each semantic dimension
+            dimensions.do { |dim|
+                var dimStr = dim.asString;
+                var rawCurves = synthData[dimStr];
+                var processed;
+
+                if(rawCurves.notNil and: { rawCurves.isArray and: { rawCurves.size > 0 }}) {
+                    // Convert and deduplicate
+                    processed = this.prProcessCurves(rawCurves);
+                    if(processed.size > 0) {
+                        synthMap[dim] = processed;
+                        curveCount = curveCount + processed.size;
+                        hasTimbralMappings = true;
+                    };
+                };
+            };
+
+            // Only add synths that have at least one timbral mapping
+            if(hasTimbralMappings) {
+                mappings[synthName] = synthMap;
+                synthCount = synthCount + 1;
+            };
+
+            // Store pitch controls (always, even for pitch-only synths)
+            this.prLoadPitchControls(synthName, synthData);
+
+            // Store review flags
+            this.prLoadNeedsReview(synthName, synthData);
+        };
+
+        refinedLoaded = true;
+        "ChimeSemantics: loaded % synths, % timbral curves from '%'".format(
+            synthCount, curveCount, PathName(path).fileName
+        ).postln;
+    }
+
+    // =========================================================
+    // PRIVATE: JSON processing helpers
+    // =========================================================
+
+    // Convert raw JSON curve array to SC spec format.
+    // Deduplicates: if same param appears twice, keeps higher confidence.
+    *prProcessCurves { |rawCurves|
+        var byParam = IdentityDictionary.new;
+        var result;
+
+        rawCurves.do { |raw|
+            var param = raw["param"].asSymbol;
+            var conf = raw["confidence"].asFloat;
+            var existing = byParam[param];
+
+            // Keep the higher-confidence entry for each param
+            if(existing.isNil or: { conf > existing[\confidence] }) {
+                byParam[param] = (
+                    \param:      param,
+                    \outLo:      raw["outLo"].asFloat,
+                    \outHi:      raw["outHi"].asFloat,
+                    \curve:      raw["curve"].asSymbol,
+                    \weight:     raw["weight"].asFloat,
+                    \confidence: conf
+                );
+            };
+        };
+
+        // Return as array, sorted by weight descending
+        result = byParam.values.asArray;
+        result.sort { |a, b| a[\weight] > b[\weight] };
+        ^result
+    }
+
+    // Extract pitch control metadata for a synth.
+    *prLoadPitchControls { |synthName, synthData|
+        var raw = synthData["pitch_controls"];
+        if(raw.notNil and: { raw.isArray and: { raw.size > 0 }}) {
+            pitchControls[synthName] = raw.collect { |pc|
+                (\param: pc["param"].asSymbol, \driftSemitones: pc["drift_semitones"].asFloat)
+            };
+        };
+    }
+
+    // Extract needs_review flags.
+    *prLoadNeedsReview { |synthName, synthData|
+        var raw = synthData["needs_review"];
+        if(raw.notNil and: { raw.isArray and: { raw.size > 0 }}) {
+            needsReview[synthName] = raw.collect(_.asString);
+        };
+    }
+
+    // =========================================================
+    // FALLBACK: hardcoded defaults (used if JSON not loaded)
+    // =========================================================
+
     *loadDefaultMappings {
         // ---- supervibe ----
-        // Warm, bell-like vibraphone synth. Our most-used.
-        // EMPIRICALLY VALIDATED March 2026 via probe sweep.
-        // Key findings:
-        //   - velocity is the dominant brightness AND warmth control (+0.99 both)
-        //   - modfreq is INVERSE brightness (-0.65), not positive!
-        //   - decay is the weight dimension (+0.99 weight, -0.99 warmth)
-        //   - modamp is warmth(+0.99) and anti-weight(-1.0)
-        //   - No pitch drift on any param. Clean timbral space.
         mappings[\supervibe] = IdentityDictionary[
             \brightness -> [
-                (\param: \velocity, \outLo: 0.2, \outHi: 1.0, \curve: \lin, \weight: 0.45),
-                (\param: \modamp,   \outLo: 0,   \outHi: 1,   \curve: \lin, \weight: 0.30),
-                (\param: \detune,   \outLo: 0,   \outHi: 0.5, \curve: \lin, \weight: 0.15),
-                // modfreq is inverse — high brightness = LOW modfreq
-                (\param: \modfreq,  \outLo: 20,  \outHi: 0,   \curve: \exp, \weight: 0.10),
+                (\param: \velocity, \outLo: 0.2, \outHi: 1.0, \curve: \lin, \weight: 0.45, \confidence: 0.99),
+                (\param: \modamp,   \outLo: 0,   \outHi: 1,   \curve: \lin, \weight: 0.30, \confidence: 0.88),
+                (\param: \detune,   \outLo: 0,   \outHi: 0.5, \curve: \lin, \weight: 0.15, \confidence: 0.73),
+                (\param: \modfreq,  \outLo: 20,  \outHi: 0,   \curve: \exp, \weight: 0.10, \confidence: 0.65),
             ],
             \warmth -> [
-                (\param: \velocity, \outLo: 0.2, \outHi: 1.0, \curve: \lin, \weight: 0.40),
-                (\param: \modamp,   \outLo: 0,   \outHi: 1,   \curve: \lin, \weight: 0.40),
-                // decay is inverse warmth — high warmth = LOW decay
-                (\param: \decay,    \outLo: 2,   \outHi: 0,   \curve: \lin, \weight: 0.20),
+                (\param: \velocity, \outLo: 0.2, \outHi: 1.0, \curve: \lin, \weight: 0.40, \confidence: 0.99),
+                (\param: \modamp,   \outLo: 0,   \outHi: 1,   \curve: \lin, \weight: 0.40, \confidence: 0.99),
+                (\param: \decay,    \outLo: 2,   \outHi: 0,   \curve: \lin, \weight: 0.20, \confidence: 0.99),
             ],
             \weight -> [
-                // decay adds weight, modamp/velocity remove it
-                (\param: \decay,    \outLo: 0,   \outHi: 2,   \curve: \lin, \weight: 0.50),
-                (\param: \modamp,   \outLo: 1,   \outHi: 0,   \curve: \lin, \weight: 0.25),
-                (\param: \velocity, \outLo: 1,   \outHi: 0.2, \curve: \lin, \weight: 0.25),
+                (\param: \decay,    \outLo: 0,   \outHi: 2,   \curve: \lin, \weight: 0.50, \confidence: 0.99),
+                (\param: \modamp,   \outLo: 1,   \outHi: 0,   \curve: \lin, \weight: 0.25, \confidence: 1.0),
+                (\param: \velocity, \outLo: 1,   \outHi: 0.2, \curve: \lin, \weight: 0.25, \confidence: 0.99),
             ],
             \movement -> [
-                (\param: \velocity, \outLo: 0.2, \outHi: 1.0, \curve: \lin, \weight: 0.45),
-                (\param: \detune,   \outLo: 0,   \outHi: 0.5, \curve: \lin, \weight: 0.30),
-                // decay is inverse movement
-                (\param: \decay,    \outLo: 2,   \outHi: 0,   \curve: \lin, \weight: 0.25),
+                (\param: \velocity, \outLo: 0.2, \outHi: 1.0, \curve: \lin, \weight: 0.45, \confidence: 0.97),
+                (\param: \detune,   \outLo: 0,   \outHi: 0.5, \curve: \lin, \weight: 0.30, \confidence: 0.60),
+                (\param: \decay,    \outLo: 2,   \outHi: 0,   \curve: \lin, \weight: 0.25, \confidence: 0.95),
             ],
             \texture -> [
-                // velocity smooths, detune roughens
-                (\param: \velocity, \outLo: 1,   \outHi: 0.2, \curve: \lin, \weight: 0.55),
-                (\param: \detune,   \outLo: 0,   \outHi: 0.5, \curve: \lin, \weight: 0.45),
+                (\param: \velocity, \outLo: 1,   \outHi: 0.2, \curve: \lin, \weight: 0.55, \confidence: 0.60),
+                (\param: \detune,   \outLo: 0,   \outHi: 0.5, \curve: \lin, \weight: 0.45, \confidence: 0.52),
             ],
             \attack -> [
-                (\param: \velocity, \outLo: 0.2, \outHi: 1.0, \curve: \lin, \weight: 1.0),
+                (\param: \velocity, \outLo: 0.2, \outHi: 1.0, \curve: \lin, \weight: 1.0, \confidence: 0.80),
             ],
         ];
 
         // ---- supersaw ----
-        // Aggressive sawtooth synth. voice controls waveform character.
-        // pitch1/resonance control filter → brightness.
-        // lfo/rate control modulation → movement.
         mappings[\supersaw] = IdentityDictionary[
             \brightness -> [
-                (\param: \pitch1,    \outLo: 0, \outHi: 2,    \curve: \exp, \weight: 0.5),
-                (\param: \resonance, \outLo: 0, \outHi: 0.7,  \curve: \lin, \weight: 0.3),
-                (\param: \voice,     \outLo: 0, \outHi: 1,    \curve: \lin, \weight: 0.2),
+                (\param: \pitch1,    \outLo: 0, \outHi: 2,    \curve: \exp, \weight: 0.5, \confidence: 1.0),
+                (\param: \resonance, \outLo: 0, \outHi: 0.7,  \curve: \lin, \weight: 0.3, \confidence: 0.5),
+                (\param: \voice,     \outLo: 0, \outHi: 1,    \curve: \lin, \weight: 0.2, \confidence: 0.47),
             ],
             \movement -> [
-                (\param: \lfo,  \outLo: 0, \outHi: 1,  \curve: \lin, \weight: 0.5),
-                (\param: \rate, \outLo: 0, \outHi: 10, \curve: \exp, \weight: 0.5),
+                (\param: \lfo,  \outLo: 0, \outHi: 1,  \curve: \lin, \weight: 0.5, \confidence: 1.0),
+                (\param: \rate, \outLo: 0, \outHi: 10, \curve: \exp, \weight: 0.5, \confidence: 0.5),
             ],
             \texture -> [
-                (\param: \voice, \outLo: 0, \outHi: 1, \curve: \lin, \weight: 1.0),
+                (\param: \voice, \outLo: 0, \outHi: 1, \curve: \lin, \weight: 1.0, \confidence: 0.44),
             ],
         ];
 
         // ---- superpiano ----
-        // Piano synth. muffle is inverse brightness. velocity is dynamics.
         mappings[\superpiano] = IdentityDictionary[
             \brightness -> [
-                // Note: muffle is INVERSE — high muffle = dark sound
-                // So we map brightness 0→1 to muffle 1→0
-                (\param: \muffle, \outLo: 1, \outHi: 0, \curve: \lin, \weight: 1.0),
+                (\param: \muffle, \outLo: 1, \outHi: 0, \curve: \lin, \weight: 1.0, \confidence: 0.94),
             ],
             \warmth -> [
-                (\param: \velocity, \outLo: 0.3, \outHi: 1.0, \curve: \lin, \weight: 1.0),
+                (\param: \velocity, \outLo: 0.3, \outHi: 1.0, \curve: \lin, \weight: 1.0, \confidence: 0.94),
             ],
             \space -> [
-                (\param: \stereo,  \outLo: 0, \outHi: 0.5, \curve: \lin, \weight: 0.5),
-                (\param: \detune,  \outLo: 0, \outHi: 0.3, \curve: \lin, \weight: 0.5),
+                (\param: \stereo,  \outLo: 0, \outHi: 0.5, \curve: \lin, \weight: 0.5, \confidence: 0.94),
+                (\param: \detune,  \outLo: 0, \outHi: 0.3, \curve: \lin, \weight: 0.5, \confidence: 0.5),
             ],
         ];
     }
+
+    // =========================================================
+    // RESOLUTION ENGINE
+    // =========================================================
 
     // Resolve a single semantic dimension for a synth.
     // Returns an Array of [paramName, value] pairs.
@@ -216,7 +373,11 @@ ChimeSemantics {
             { true } { input.linlin(0, 1, outLo, outHi) }
     }
 
-    // List all synths that have mappings
+    // =========================================================
+    // QUERY INTERFACE
+    // =========================================================
+
+    // List all synths that have timbral mappings
     *synths { ^mappings.keys.asArray.sort }
 
     // List all dimensions mapped for a given synth
@@ -226,27 +387,113 @@ ChimeSemantics {
         ^synthMap.keys.asArray.sort
     }
 
-    // Pretty print a synth's mapping for debugging
+    // Get pitch controls for a synth (params to avoid for timbral work)
+    *pitchControlsFor { |synthName|
+        ^pitchControls[synthName] ?? { [] }
+    }
+
+    // Is a given param a pitch control for this synth?
+    *isPitchControl { |synthName, param|
+        var pcs = pitchControls[synthName];
+        if(pcs.isNil) { ^false };
+        ^pcs.any { |pc| pc[\param] == param }
+    }
+
+    // Get the confidence range for a synth's mappings
+    *confidenceFor { |synthName|
+        var synthMap = mappings[synthName];
+        var allConf;
+        if(synthMap.isNil) { ^nil };
+        allConf = [];
+        synthMap.do { |curves|
+            curves.do { |spec|
+                if(spec[\confidence].notNil) {
+                    allConf = allConf.add(spec[\confidence]);
+                };
+            };
+        };
+        if(allConf.isEmpty) { ^nil };
+        ^(\min: allConf.minItem, \max: allConf.maxItem, \mean: allConf.mean)
+    }
+
+    // Get review flags for a synth
+    *reviewFor { |synthName|
+        ^needsReview[synthName] ?? { [] }
+    }
+
+    // =========================================================
+    // INTROSPECTION / DEBUG
+    // =========================================================
+
+    // Pretty print a synth's mapping
     *inspect { |synthName|
         var synthMap = mappings[synthName];
+        var pcs;
         if(synthMap.isNil) {
             "ChimeSemantics: no mapping for '%'".format(synthName).postln;
             ^this
         };
+        "".postln;
         "=== % ===".format(synthName).postln;
-        synthMap.keysValuesDo { |dim, curves|
-            "  %:".format(dim).postln;
-            curves.do { |spec|
-                "    % → [%, %] (%, weight %)".format(
-                    spec[\param], spec[\outLo], spec[\outHi],
-                    spec[\curve], spec[\weight]
+        if(refinedLoaded) {
+            var conf = this.confidenceFor(synthName);
+            if(conf.notNil) {
+                "  confidence: %.2f – %.2f (mean %.2f)".format(
+                    conf[\min], conf[\max], conf[\mean]
                 ).postln;
             };
         };
+        synthMap.keys.asArray.sort.do { |dim|
+            var curves = synthMap[dim];
+            "  %:".format(dim).postln;
+            curves.do { |spec|
+                var confStr = if(spec[\confidence].notNil) {
+                    " conf %.2f".format(spec[\confidence])
+                } { "" };
+                "    % → [%, %] (%, w:%%%)".format(
+                    spec[\param], spec[\outLo].round(0.001), spec[\outHi].round(0.001),
+                    spec[\curve], spec[\weight].round(0.001), confStr
+                ).postln;
+            };
+        };
+        pcs = this.pitchControlsFor(synthName);
+        if(pcs.size > 0) {
+            "  pitch controls (avoid for timbre):".postln;
+            pcs.do { |pc|
+                "    % (drift: % semitones)".format(pc[\param], pc[\driftSemitones]).postln;
+            };
+        };
+        this.reviewFor(synthName).do { |r|
+            "  ⚠ review: %".format(r).postln;
+        };
     }
 
-    // Add or update a mapping programmatically
-    // (Qwen's probing results get loaded this way)
+    // Print summary of all loaded mappings
+    *summary {
+        var totalCurves = 0;
+        "".postln;
+        "=== ChimeSemantics Summary ===".postln;
+        "  refined loaded: %".format(refinedLoaded).postln;
+        "  synths: %".format(this.synths.size).postln;
+        this.synths.do { |s|
+            var dims = this.dimensionsFor(s);
+            var curves = 0;
+            dims.do { |d| curves = curves + mappings[s][d].size };
+            totalCurves = totalCurves + curves;
+            "    % — % dimensions, % curves".format(s, dims.size, curves).postln;
+        };
+        "  total curves: %".format(totalCurves).postln;
+        if(pitchControls.size > 0) {
+            "  synths with pitch controls: %".format(pitchControls.keys.asArray.sort).postln;
+        };
+        "".postln;
+    }
+
+    // =========================================================
+    // PROGRAMMATIC MAPPING UPDATES
+    // =========================================================
+
+    // Add or update a single mapping spec
     *addMapping { |synthName, dimension, paramSpec|
         if(mappings[synthName].isNil) {
             mappings[synthName] = IdentityDictionary.new;
@@ -255,5 +502,10 @@ ChimeSemantics {
             mappings[synthName][dimension] = [];
         };
         mappings[synthName][dimension] = mappings[synthName][dimension].add(paramSpec);
+    }
+
+    // Remove all mappings for a synth (useful before reloading)
+    *clearSynth { |synthName|
+        mappings.removeAt(synthName);
     }
 }
