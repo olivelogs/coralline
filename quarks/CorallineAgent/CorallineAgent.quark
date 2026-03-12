@@ -1,0 +1,9 @@
+(
+    name: "CorallineAgent",
+    summary: "Bidirectional OSC layer for AI agent ↔ SuperCollider communication",
+    version: "0.1.0",
+    schelp: "CorallineAgent",
+    url: "https://github.com/olivelo/coralline",
+    dependencies: ["CorallineSemantics"],
+    since: "2026-03-06"
+)

@@ -1,14 +1,15 @@
-# Chime
+# Coralline
 
-Chime is a system for AI agents to compose and perform music through SuperCollider. Agents think in perceptual terms (brightness, warmth, texture) and Chime translates that into synth-specific parameters.
+Coralline is a system for AI agents to compose and perform music through SuperCollider. Agents think in perceptual terms (brightness, warmth, texture) and Coralline translates that into synth-specific parameters.
 
 ## Architecture
 
 Three SuperCollider quarks (two in development, one future):
 
-- **ChimeSemantics** (`quarks/ChimeSemantics/`) — Semantic parameter mapping engine. Maps 7 perceptual dimensions (brightness, warmth, texture, movement, space, weight, attack) normalized 0-1 to synth-specific params with weighted curves. Currently has empirically validated mappings for supervibe, supersaw, superpiano.
-- **ChimeAgent** (`quarks/ChimeAgent/`) — Bidirectional OSC layer. Handles `/chime/play` (semantic), `/chime/raw` (bypass), `/chime/loop/*` (JITLib/Pdef patterns), and `/chime/ping/*` (state queries). Supports `|` pipe separator to mix semantic + raw params.
-- **ChimeDirt** (future) — Custom SynthDefs designed natively for the semantic layer.
+- **CorallineSemantics** (`quarks/CorallineSemantics/`) — Semantic parameter mapping engine. Maps 7 perceptual dimensions (brightness, warmth, texture, movement, space, weight, attack) normalized 0-1 to synth-specific params with weighted curves. Currently has empirically validated mappings for supervibe, supersaw, superpiano.
+- **CorallineAgent** (`quarks/CorallineAgent/`) — Bidirectional OSC layer. Handles `/coralline/play` (semantic), `/coralline/raw` (bypass), `/coralline/loop/*` (JITLib/Pdef patterns), and `/coralline/ping/*` (state queries). Supports `|` pipe separator to mix semantic + raw params.
+- **CorallineAnalysis** (`quarks/CorallineAgent/Classes/CorallineAnalysis.sc`) — Real-time audio analysis. FFT-based analyzer providing rms, spectral centroid, flatness, pitch, and pitch confidence. Uses a callback pattern to decouple from OSC transport.
+- **CorallineDirt** (future) — Custom SynthDefs designed natively for the semantic layer.
 
 **MCP2OSC** (`MCP2OSC/`) — Generic MCP-to-OSC bridge (Node.js). Sends to SuperDirt on port 57120. Works as-is, no modifications needed currently.
 
@@ -23,20 +24,20 @@ Three SuperCollider quarks (two in development, one future):
 
 The quarks in `quarks/` are symlinked into SuperCollider's downloaded-quarks directory. The repo is the canonical source. Changes here show up in SC after recompiling the class library (Cmd+Shift+L in SC IDE).
 
-## Probing Pipeline (ChimeSemantics/Data/)
+## Probing Pipeline (CorallineSemantics/Data/)
 
 How semantic mappings are built:
 1. `probing_plan.py` — reference of all synths and params to probe
 2. `probe_synths.scd` — SC script that sweeps params and records wavs
 3. `analyze_probes.py` — librosa analysis, produces `probes_analysis.json` and `probes_profiles.json`
 4. Human review of auto-suggested mappings → refined mappings
-5. Mappings get hardcoded into `ChimeSemantics.sc` (eventual goal: `loadMappingsFromFile`)
+5. Mappings get hardcoded into `CorallineSemantics.sc` (eventual goal: `loadMappingsFromFile`)
 
 ## Effects
 
 Effects are passed as raw SuperDirt params after the `|` pipe separator:
 ```
-/chime/play supervibe 0 brightness 0.7 | room 0.5 lpf 3000 krush 3
+/coralline/play supervibe 0 brightness 0.7 | room 0.5 lpf 3000 krush 3
 ```
 Reference: `scd/docs/effects-reference.md`
 

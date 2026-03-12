@@ -1,9 +1,9 @@
 (
-    name: "ChimeSemantics",
+    name: "CorallineSemantics",
     summary: "Semantic parameter mapping for agent-driven music composition",
     version: "0.1.0",
-    schelp: "ChimeSemantics",
-    url: "https://github.com/olivelo/chime",
+    schelp: "CorallineSemantics",
+    url: "https://github.com/olivelo/coralline",
     dependencies: [],
     since: "2026-03-06"
 )

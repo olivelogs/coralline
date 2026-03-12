@@ -1,6 +1,6 @@
-# Chime
+# Coralline
 
-Chime started as a project to make music with LLMs. After a few twists and turns, it became a way for LLMs to make music. 
+Coralline started as a project to make music with LLMs. After a few twists and turns, it became a way for LLMs to make music. 
 Now claude makes beeps and boops and it is delightful.
 
 This started in linking Sonic Pi through OSC. Using a sonic pi skill and OSC addresses, claude could send ruby to sonic pi to play music. After some experimentation and further learning, we decided Tidal would be more efficient and SuperCollider would be more adaptable for our purposes.

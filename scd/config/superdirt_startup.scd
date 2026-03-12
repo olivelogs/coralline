@@ -1,9 +1,9 @@
 /*
-Chime project startup file
+Coralline project startup file
 
 Load it by calling:
 
-"Users/olivelo/chime/scd/config/superdirt_startup.scd".load
+"Users/olivelo/coralline/scd/config/superdirt_startup.scd".load
 
 from the supercollider startup file in:
 
@@ -32,15 +32,15 @@ s.reboot { // server options are only updated on reboot
 		~dirt.stop; // stop any old ones, avoid duplicate dirt (if it is nil, this won't do anything)
 		~dirt = SuperDirt(2, s); // two output channels, increase if you want to pan across more channels
 		~dirt.loadSoundFiles;
-		~dirt.loadSoundFiles("/Users/olivelo/chime/samples/claude/*");   // load samples
+		~dirt.loadSoundFiles("/Users/olivelo/coralline/samples/claude/*");   // load samples
 		// for example: ~dirt.loadSoundFiles("/Users/myUserName/Dirt/samples/*");
 		s.sync; // optionally: wait for samples to be read
 		~dirt.start(57120, 0 ! 12);   // start listening on port 57120, create two busses each sending audio to channel 0
 		SuperDirt.default = ~dirt; // make this instance available in sclang (optional)
 		"SuperDirt running.".postln;
-		ChimeSemantics.loadRefined;   // reads refined_mappings.json, replaces all mappings
-		ChimeSemantics.summary;        // see what loaded
-		ChimeAgent.start;
+		CorallineSemantics.loadRefined;   // reads refined_mappings.json, replaces all mappings
+		CorallineSemantics.summary;        // see what loaded
+		CorallineAgent.start;
 		// optional, needed for convenient access from sclang:
 		// (
 			//~d1 = ~dirt.orbits[0]; ~d2 = ~dirt.orbits[1]; ~d3 = ~dirt.orbits[2];

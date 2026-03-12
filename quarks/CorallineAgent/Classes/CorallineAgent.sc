@@ -1,20 +1,20 @@
-//    ChimeAgent — Bidirectional OSC layer for agent ↔ SuperCollider.
+//    CorallineAgent — Bidirectional OSC layer for agent ↔ SuperCollider.
 //
 //    Handles:
-//    - /chime/play        → semantic play (routes through ChimeSemantics → SuperDirt)
-//    - /chime/raw         → bypass semantics, raw SuperDirt params
-//    - /chime/loop/start  → start pattern loop via JITLib (Pdef)
-//    - /chime/loop/stop   → stop a named loop
-//    - /chime/loop/modify → hot-swap a running loop
-//    - /chime/phrase      → one-shot phrase with gradient params
-//    - /chime/ping/state  → request state (pong)
-//    - /chime/ping/audio  → request audio analysis snapshot (pong)
-//    - /chime/listen/start → start continuous audio analysis pong
-//    - /chime/listen/stop  → stop continuous audio analysis pong
-//    - /chime/pong/        → outbound analysis/state data
+//    - /coralline/play        → semantic play (routes through CorallineSemantics → SuperDirt)
+//    - /coralline/raw         → bypass semantics, raw SuperDirt params
+//    - /coralline/loop/start  → start pattern loop via JITLib (Pdef)
+//    - /coralline/loop/stop   → stop a named loop
+//    - /coralline/loop/modify → hot-swap a running loop
+//    - /coralline/phrase      → one-shot phrase with gradient params
+//    - /coralline/ping/state  → request state (pong)
+//    - /coralline/ping/audio  → request audio analysis snapshot (pong via CorallineAnalysis)
+//    - /coralline/listen/start → start continuous audio analysis pong
+//    - /coralline/listen/stop  → stop continuous audio analysis pong
+//    - /coralline/pong/        → outbound analysis/state data
 //
-//    /chime/play supports a "|" separator for mixing semantic + raw params:
-//        /chime/play supervibe 0 brightness 0.7 warmth 0.4 | gain 1.2 krush 3
+//    /coralline/play supports a "|" separator for mixing semantic + raw params:
+//        /coralline/play supervibe 0 brightness 0.7 warmth 0.4 | gain 1.2 krush 3
 //
 //    CRITICAL: n uses SuperDirt's note system, NOT MIDI!
 //      n 0 = C5 (middle C), n -12 = C4, n 12 = C6
@@ -24,61 +24,60 @@
 //
 //    Setup:
 //        // After SuperDirt is running:
-//        ChimeAgent.start;
+//        CorallineAgent.start;
 //
 //        // To stop:
-//        ChimeAgent.stop;
+//        CorallineAgent.stop;
 //
 //        // With custom ports:
-//        ChimeAgent.start(listenPort: 57120, replyPort: 9000);
+//        CorallineAgent.start(listenPort: 57120, replyPort: 9000);
 //
 //    March 2026 — Olive + Claude
 
-ChimeAgent {
+CorallineAgent {
 
     classvar <oscResponders;    // Array of OSCdef responders
     classvar <replyAddr;        // NetAddr for sending pong replies
     classvar <loops;            // Dictionary of active Pdef loops
     classvar <isRunning;
 
-    // Audio analysis
-    classvar <analyzerSynth;    // Synth running FFT analysis on main output
-    classvar <analyzerBuses;    // IdentityDictionary of control buses for analysis metrics
-    classvar <analyzerRunning;  // Boolean
-    classvar <listenTask;       // SkipJack for continuous pong mode
-    classvar <listenRate;       // Pong rate in Hz when listening
-
     *initClass {
         oscResponders = [];
         loops = IdentityDictionary.new;
         isRunning = false;
-        analyzerSynth = nil;
-        analyzerBuses = nil;
-        analyzerRunning = false;
-        listenTask = nil;
-        listenRate = 4;  // default: 4 pongs per second
     }
 
     *start { |listenPort = 57120, replyPort = 9501, replyHost = "127.0.0.1"|
         if(isRunning) {
-            "ChimeAgent: already running. Call .stop first.".warn;
+            "CorallineAgent: already running. Call .stop first.".warn;
             ^this
         };
 
         replyAddr = NetAddr(replyHost, replyPort);
 
         this.registerResponders;
-        this.startAnalyzer;
+
+        // Set up audio analysis with pong callback
+        CorallineAnalysis.pongCallback = { |a|
+            replyAddr.sendMsg('/coralline/pong/audio',
+                "rms",      a[\rms],
+                "centroid", a[\centroid],
+                "flatness", a[\flatness],
+                "freq",     a[\freq],
+                "hasFreq",  a[\hasFreq]
+            );
+        };
+        CorallineAnalysis.startAnalyzer;
 
         isRunning = true;
-        "ChimeAgent: listening on port %, replies to %:%".format(
+        "CorallineAgent: listening on port %, replies to %:%".format(
             listenPort, replyHost, replyPort
         ).postln;
     }
 
     *stop {
-        this.stopListening;
-        this.stopAnalyzer;
+        CorallineAnalysis.stopListening;
+        CorallineAnalysis.stopAnalyzer;
         oscResponders.do { |r| r.free };
         oscResponders = [];
         // Stop all loops
@@ -88,17 +87,17 @@ ChimeAgent {
         };
         loops = IdentityDictionary.new;
         isRunning = false;
-        "ChimeAgent: stopped.".postln;
+        "CorallineAgent: stopped.".postln;
     }
 
     *registerResponders {
 
         // ==========================================
-        // /chime/play — Semantic play
+        // /coralline/play — Semantic play
         // ==========================================
         // Format:
-        //   /chime/play synthName n [dim1 val1 ...] [| rawKey1 rawVal1 ...]
-        // The "|" separator divides semantic params (resolved via ChimeSemantics)
+        //   /coralline/play synthName n [dim1 val1 ...] [| rawKey1 rawVal1 ...]
+        // The "|" separator divides semantic params (resolved via CorallineSemantics)
         // from raw SuperDirt params (passed through as-is, e.g. effects).
         //
         // n uses SuperDirt's note system, NOT MIDI!
@@ -106,105 +105,105 @@ ChimeAgent {
         //   To convert from MIDI: n = midinote - 60
 
         oscResponders = oscResponders.add(
-            OSCdef(\chimePlay, { |msg, time, addr, recvPort|
+            OSCdef(\corallinePlay, { |msg, time, addr, recvPort|
                 this.handlePlay(msg);
-            }, '/chime/play')
+            }, '/coralline/play')
         );
 
         // ==========================================
-        // /chime/raw — Raw SuperDirt passthrough
+        // /coralline/raw — Raw SuperDirt passthrough
         // ==========================================
-        // Same format as /dirt/play but via chime's routing
+        // Same format as /dirt/play but via coralline's routing
         oscResponders = oscResponders.add(
-            OSCdef(\chimeRaw, { |msg, time, addr, recvPort|
+            OSCdef(\corallineRaw, { |msg, time, addr, recvPort|
                 this.handleRaw(msg);
-            }, '/chime/raw')
+            }, '/coralline/raw')
         );
 
         // ==========================================
-        // /chime/loop/start — Start a named loop
+        // /coralline/loop/start — Start a named loop
         // ==========================================
-        // /chime/loop/start loopName synthName "0 3 7 12" cycleDur [dim1 val1 ...] [| raw1 val1 ...]
+        // /coralline/loop/start loopName synthName "0 3 7 12" cycleDur [dim1 val1 ...] [| raw1 val1 ...]
         oscResponders = oscResponders.add(
-            OSCdef(\chimeLoopStart, { |msg, time, addr, recvPort|
+            OSCdef(\corallineLoopStart, { |msg, time, addr, recvPort|
                 this.handleLoopStart(msg);
-            }, '/chime/loop/start')
+            }, '/coralline/loop/start')
         );
 
         // ==========================================
-        // /chime/loop/modify — Hot-swap a running loop
+        // /coralline/loop/modify — Hot-swap a running loop
         // ==========================================
         // Same format as loop/start — redefines the Pdef in place
         oscResponders = oscResponders.add(
-            OSCdef(\chimeLoopModify, { |msg, time, addr, recvPort|
+            OSCdef(\corallineLoopModify, { |msg, time, addr, recvPort|
                 this.handleLoopStart(msg);  // same logic, Pdef handles hot-swap
-            }, '/chime/loop/modify')
+            }, '/coralline/loop/modify')
         );
 
         // ==========================================
-        // /chime/loop/stop — Stop a named loop
+        // /coralline/loop/stop — Stop a named loop
         // ==========================================
         oscResponders = oscResponders.add(
-            OSCdef(\chimeLoopStop, { |msg, time, addr, recvPort|
+            OSCdef(\corallineLoopStop, { |msg, time, addr, recvPort|
                 var loopName = msg[1].asSymbol;
                 this.stopLoop(loopName);
-            }, '/chime/loop/stop')
+            }, '/coralline/loop/stop')
         );
 
-		// ==========================================
-        // /chime/phrase — One-shot phrase with gradient
         // ==========================================
-        // /chime/phrase synthName "0 3 7" 0.5 [dim1 val1 [val2]] ... [| raw1 val1 [val2] ...]
+        // /coralline/phrase — One-shot phrase with gradient
+        // ==========================================
+        // /coralline/phrase synthName "0 3 7" 0.5 [dim1 val1 [val2]] ... [| raw1 val1 [val2] ...]
         // One value after a key = blanket for all notes
         // Two values after a key = gradient (start → end) interpolated across phrase
         // dur is seconds per note
         oscResponders = oscResponders.add(
-            OSCdef(\chimePhrase, { |msg, time, addr, recvPort|
+            OSCdef(\corallinePhrase, { |msg, time, addr, recvPort|
                 this.handlePhrase(msg);
-            }, '/chime/phrase')
+            }, '/coralline/phrase')
         );
-		
+
         // ==========================================
-        // /chime/ping/state — Request current state
+        // /coralline/ping/state — Request current state
         // ==========================================
         oscResponders = oscResponders.add(
-            OSCdef(\chimePingState, { |msg, time, addr, recvPort|
+            OSCdef(\corallinePingState, { |msg, time, addr, recvPort|
                 this.handlePingState;
-            }, '/chime/ping/state')
+            }, '/coralline/ping/state')
         );
 
         // ==========================================
-        // /chime/ping/audio — Request audio analysis snapshot
+        // /coralline/ping/audio — Request audio analysis snapshot
         // ==========================================
-        // Returns /chime/pong/audio with rms, centroid, flatness, freq, hasFreq
+        // Returns /coralline/pong/audio with rms, centroid, flatness, freq, hasFreq
         oscResponders = oscResponders.add(
-            OSCdef(\chimePingAudio, { |msg, time, addr, recvPort|
-                this.handlePingAudio;
-            }, '/chime/ping/audio')
+            OSCdef(\corallinePingAudio, { |msg, time, addr, recvPort|
+                CorallineAnalysis.handlePingAudio;
+            }, '/coralline/ping/audio')
         );
 
         // ==========================================
-        // /chime/listen/start — Continuous audio pong
+        // /coralline/listen/start — Continuous audio pong
         // ==========================================
         // Optional arg: rate in Hz (default: 4)
-        //   /chime/listen/start 8  → 8 pongs per second
+        //   /coralline/listen/start 8  → 8 pongs per second
         oscResponders = oscResponders.add(
-            OSCdef(\chimeListenStart, { |msg, time, addr, recvPort|
-                var rate = if(msg.size > 1) { msg[1].asFloat } { listenRate };
-                this.startListening(rate);
-            }, '/chime/listen/start')
+            OSCdef(\corallineListenStart, { |msg, time, addr, recvPort|
+                var rate = if(msg.size > 1) { msg[1].asFloat } { CorallineAnalysis.listenRate };
+                CorallineAnalysis.startListening(rate);
+            }, '/coralline/listen/start')
         );
 
         // ==========================================
-        // /chime/listen/stop — Stop continuous pong
+        // /coralline/listen/stop — Stop continuous pong
         // ==========================================
         oscResponders = oscResponders.add(
-            OSCdef(\chimeListenStop, { |msg, time, addr, recvPort|
-                this.stopListening;
-            }, '/chime/listen/stop')
+            OSCdef(\corallineListenStop, { |msg, time, addr, recvPort|
+                CorallineAnalysis.stopListening;
+            }, '/coralline/listen/stop')
         );
 
-        "ChimeAgent: responders registered.".postln;
+        "CorallineAgent: responders registered.".postln;
     }
 
     // ---- Play handlers ----
@@ -212,9 +211,9 @@ ChimeAgent {
     *handlePlay { |msg|
         var synthName, note, semantics, rawParams, resolved, args, pipeIdx;
 
-        // msg format: ['/chime/play', synthName, n, key1, val1, ... | rawKey1, rawVal1, ...]
+        // msg format: ['/coralline/play', synthName, n, key1, val1, ... | rawKey1, rawVal1, ...]
         if(msg.size < 3) {
-            "ChimeAgent: /chime/play needs at least synthName and n".warn;
+            "CorallineAgent: /coralline/play needs at least synthName and n".warn;
             ^this
         };
 
@@ -253,8 +252,8 @@ ChimeAgent {
             };
         };
 
-        // Resolve semantic params through ChimeSemantics
-        resolved = ChimeSemantics.resolveAll(synthName, semantics);
+        // Resolve semantic params through CorallineSemantics
+        resolved = CorallineSemantics.resolveAll(synthName, semantics);
 
         // Build SuperDirt args — use 'n' not 'midinote'
         args = ["s", synthName.asString, "n", note];
@@ -278,7 +277,7 @@ ChimeAgent {
 
         this.sendToDirt(args);
 
-        "ChimeAgent: play % n % → sem:% raw:%".format(
+        "CorallineAgent: play % n % → sem:% raw:%".format(
             synthName, note, resolved, rawParams
         ).postln;
     }
@@ -300,14 +299,14 @@ ChimeAgent {
     // ---- Loop handlers (JITLib) ----
 
     *handleLoopStart { |msg|
-        // msg: ['/chime/loop/start', loopName, synthName, notePattern, cycleDur, ...]
+        // msg: ['/coralline/loop/start', loopName, synthName, notePattern, cycleDur, ...]
         // Optional trailing args: semantic and/or raw params (with | separator)
-        //   /chime/loop/start myloop supersaw "0 3 7" 2.0 brightness 0.7 | krush 3
+        //   /coralline/loop/start myloop supersaw "0 3 7" 2.0 brightness 0.7 | krush 3
         var loopName, synthName, noteStr, cycleDur, notes, dur;
         var semantics, rawParams, resolved, extraPairs, pipeIdx;
 
         if(msg.size < 5) {
-            "ChimeAgent: loop needs loopName, synthName, notePattern, cycleDur".warn;
+            "CorallineAgent: loop needs loopName, synthName, notePattern, cycleDur".warn;
             ^this
         };
 
@@ -352,7 +351,7 @@ ChimeAgent {
 
         // Resolve semantic params
         resolved = if(semantics.size > 0) {
-            ChimeSemantics.resolveAll(synthName, semantics);
+            CorallineSemantics.resolveAll(synthName, semantics);
         } { () };
 
         // Build extra Pbind pairs from resolved + raw
@@ -379,7 +378,7 @@ ChimeAgent {
 
         loops[loopName] = Pdef(loopName);
 
-        "ChimeAgent: loop '%' started — % playing % (cycle %s, sem:% raw:%)".format(
+        "CorallineAgent: loop '%' started — % playing % (cycle %s, sem:% raw:%)".format(
             loopName, synthName, notes, cycleDur, resolved, rawParams
         ).postln;
     }
@@ -390,22 +389,22 @@ ChimeAgent {
             pdef.stop;
             pdef.clear;
             loops.removeAt(loopName);
-            "ChimeAgent: loop '%' stopped.".format(loopName).postln;
+            "CorallineAgent: loop '%' stopped.".format(loopName).postln;
         } {
-            "ChimeAgent: no loop named '%'".format(loopName).warn;
+            "CorallineAgent: no loop named '%'".format(loopName).warn;
         };
     }
-	
-	// ---- Phrase handler ----
+
+    // ---- Phrase handler ----
 
     *handlePhrase { |msg|
-        // msg: ['/chime/phrase', synthName, notePattern, durPerNote, ...params...]
+        // msg: ['/coralline/phrase', synthName, notePattern, durPerNote, ...params...]
         var synthName, noteStr, durPerNote, notes, numNotes;
         var semGradients, rawGradients, pipeIdx;
         var paramRange;
 
         if(msg.size < 4) {
-            "ChimeAgent: /chime/phrase needs synthName, notePattern, durPerNote".warn;
+            "CorallineAgent: /coralline/phrase needs synthName, notePattern, durPerNote".warn;
             ^this
         };
 
@@ -417,7 +416,7 @@ ChimeAgent {
         numNotes = notes.size;
 
         if(numNotes == 0) {
-            "ChimeAgent: empty note pattern".warn;
+            "CorallineAgent: empty note pattern".warn;
             ^this
         };
 
@@ -452,9 +451,9 @@ ChimeAgent {
                 // Interpolate semantic gradients at position t
                 semantics = this.prInterpolateGradients(semGradients, t);
 
-                // Resolve through ChimeSemantics
+                // Resolve through CorallineSemantics
                 resolved = if(semantics.size > 0) {
-                    ChimeSemantics.resolveAll(synthName, semantics);
+                    CorallineSemantics.resolveAll(synthName, semantics);
                 } { () };
 
                 // Interpolate raw gradients at position t
@@ -485,12 +484,12 @@ ChimeAgent {
                 };
             };
 
-            "ChimeAgent: phrase complete — % % notes, %s/note".format(
+            "CorallineAgent: phrase complete — % % notes, %s/note".format(
                 synthName, numNotes, durPerNote
             ).postln;
         };
 
-        "ChimeAgent: phrase started — % % notes, %s/note sem:% raw:%".format(
+        "CorallineAgent: phrase started — % % notes, %s/note sem:% raw:%".format(
             synthName, numNotes, durPerNote, semGradients.keys, rawGradients.keys
         ).postln;
     }
@@ -548,160 +547,7 @@ ChimeAgent {
         ^result
     }
 
-    // ---- Audio analyzer ----
-
-    *startAnalyzer {
-        if(analyzerRunning) {
-            "ChimeAgent: analyzer already running.".warn;
-            ^this
-        };
-
-        fork {
-            // Define the analyzer SynthDef
-            SynthDef(\chimeAnalyzer, {
-                var sig, mono, chain;
-                var amp, freq, hasFreq, centroid, flatness;
-
-                // Read main output bus — captures everything: SuperDirt, Tidal, all of it
-                sig = In.ar(0, 2);
-                mono = Mix.ar(sig) * 0.5;
-
-                // Amplitude tracking (smoothed)
-                amp = Amplitude.kr(mono, attackTime: 0.05, releaseTime: 0.2);
-
-                // Pitch detection
-                # freq, hasFreq = Pitch.kr(mono, minFreq: 60, maxFreq: 4000);
-
-                // FFT analysis
-                chain = FFT(LocalBuf(2048), mono);
-                centroid = SpecCentroid.kr(chain);
-                flatness = SpecFlatness.kr(chain);
-
-                // Write to control buses
-                Out.kr(\ampBus.kr(0), amp);
-                Out.kr(\freqBus.kr(0), freq);
-                Out.kr(\hasFreqBus.kr(0), hasFreq);
-                Out.kr(\centroidBus.kr(0), centroid);
-                Out.kr(\flatnessBus.kr(0), flatness);
-            }).add;
-
-            Server.default.sync;
-
-            // Allocate control buses
-            analyzerBuses = IdentityDictionary[
-                \amp      -> Bus.control(Server.default, 1),
-                \freq     -> Bus.control(Server.default, 1),
-                \hasFreq  -> Bus.control(Server.default, 1),
-                \centroid -> Bus.control(Server.default, 1),
-                \flatness -> Bus.control(Server.default, 1),
-            ];
-
-            // Create analyzer synth at tail of default group
-            // (so it reads after everything else has written to bus 0)
-            analyzerSynth = Synth(\chimeAnalyzer, [
-                \ampBus,      analyzerBuses[\amp].index,
-                \freqBus,     analyzerBuses[\freq].index,
-                \hasFreqBus,  analyzerBuses[\hasFreq].index,
-                \centroidBus, analyzerBuses[\centroid].index,
-                \flatnessBus, analyzerBuses[\flatness].index,
-            ], target: Server.default.defaultGroup, addAction: \addToTail);
-
-            analyzerRunning = true;
-            "ChimeAgent: audio analyzer started (listening on bus 0).".postln;
-        };
-    }
-
-    *stopAnalyzer {
-        if(analyzerRunning.not) { ^this };
-
-        if(analyzerSynth.notNil) {
-            analyzerSynth.free;
-            analyzerSynth = nil;
-        };
-
-        if(analyzerBuses.notNil) {
-            analyzerBuses.do { |bus| bus.free };
-            analyzerBuses = nil;
-        };
-
-        analyzerRunning = false;
-        "ChimeAgent: audio analyzer stopped.".postln;
-    }
-
-    // Read all analysis buses synchronously and return as Event.
-    // .getSynchronous reads from shared memory — fast, no server roundtrip,
-    // at most one control period behind.
-    *getAnalysis {
-        if(analyzerRunning.not or: { analyzerBuses.isNil }) {
-            ^(\rms: 0, \centroid: 0, \flatness: 0, \freq: 0, \hasFreq: 0)
-        };
-
-        ^(
-            \rms:      analyzerBuses[\amp].getSynchronous,
-            \centroid: analyzerBuses[\centroid].getSynchronous,
-            \flatness: analyzerBuses[\flatness].getSynchronous,
-            \freq:     analyzerBuses[\freq].getSynchronous,
-            \hasFreq:  analyzerBuses[\hasFreq].getSynchronous
-        )
-    }
-
-    // Send a single audio analysis pong.
-    *sendAudioPong {
-        var a = this.getAnalysis;
-
-        replyAddr.sendMsg('/chime/pong/audio',
-            "rms",      a[\rms],
-            "centroid", a[\centroid],
-            "flatness", a[\flatness],
-            "freq",     a[\freq],
-            "hasFreq",  a[\hasFreq]
-        );
-    }
-
-    // Start continuous listening — sends pong at the given rate.
-    *startListening { |rate|
-        rate = rate ?? { listenRate };
-        listenRate = rate;
-
-        this.stopListening;  // clear any existing
-
-        if(analyzerRunning.not) {
-            "ChimeAgent: can't listen — analyzer not running.".warn;
-            ^this
-        };
-
-        listenTask = SkipJack(
-            { this.sendAudioPong },
-            dt: rate.reciprocal,
-            stopTest: { analyzerRunning.not },
-            name: "ChimeAudioPong"
-        );
-
-        "ChimeAgent: listening at % Hz → /chime/pong/audio".format(rate).postln;
-    }
-
-    // Stop continuous listening.
-    *stopListening {
-        if(listenTask.notNil) {
-            listenTask.stop;
-            listenTask = nil;
-            "ChimeAgent: stopped listening.".postln;
-        };
-    }
-
     // ---- Ping/Pong handlers ----
-
-    *handlePingAudio {
-        if(analyzerRunning.not) {
-            "ChimeAgent: analyzer not running — call .startAnalyzer first".warn;
-            ^this
-        };
-
-        this.sendAudioPong;
-
-        // Quiet log — this gets called a lot in listen mode
-        // "ChimeAgent: pong/audio sent".postln;
-    }
 
     *handlePingState {
         var activeLoops, msg;
@@ -709,13 +555,13 @@ ChimeAgent {
         activeLoops = loops.keys.asArray;
 
         // Reply with state
-        replyAddr.sendMsg('/chime/pong/state',
+        replyAddr.sendMsg('/coralline/pong/state',
             "loops", activeLoops.size,
             "loop_names", activeLoops.join(","),
             "running", isRunning.asInteger
         );
 
-        "ChimeAgent: pong/state sent → % active loops".format(activeLoops.size).postln;
+        "CorallineAgent: pong/state sent → % active loops".format(activeLoops.size).postln;
     }
 
     // ---- Convenience ----
@@ -723,17 +569,4 @@ ChimeAgent {
     *activeLoops {
         ^loops.keys.asArray
     }
-
-    // Quick check: what does the room sound like right now?
-    *hear {
-        var a = this.getAnalysis;
-        "=== ChimeAgent hears ===".postln;
-        "  rms:      %  (loudness)".format(a[\rms].round(0.001)).postln;
-        "  centroid: % Hz  (brightness)".format(a[\centroid].round(1)).postln;
-        "  flatness: %  (texture: 0=tone, 1=noise)".format(a[\flatness].round(0.001)).postln;
-        "  freq:     % Hz  (pitch)".format(a[\freq].round(1)).postln;
-        "  hasFreq:  %  (pitch confidence)".format(a[\hasFreq].round(0.01)).postln;
-        ^a
-    }
 }
-        

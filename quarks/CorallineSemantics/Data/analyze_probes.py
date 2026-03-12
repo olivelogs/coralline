@@ -1,5 +1,5 @@
 """
-ChimeSemantics Probe Analyzer
+CorallineSemantics Probe Analyzer
 ==============================
 Processes wav files from probe_synths.scd and generates
 per-param perceptual profiles for semantic mapping.

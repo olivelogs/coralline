@@ -11,11 +11,11 @@ tidal/
 scd/docs/
 archive/
 skills/
-quarks/ChimeSemantics/Data/probes
-quarks/ChimeSemantics/Data/qwen_chunks
-quarks/ChimeSemantics/Data/qwen
+quarks/CorallineSemantics/Data/probes
+quarks/CorallineSemantics/Data/qwen_chunks
+quarks/CorallineSemantics/Data/qwen
 
 # specific files
-chime/package-lock.json
+package-lock.json
 
 

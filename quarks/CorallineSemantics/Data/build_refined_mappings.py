@@ -3,7 +3,7 @@ Build refined_mappings.json from the probe analysis auto-suggestions.
 
 Turns out the Python analyzer's auto-suggestions are more accurate than 
 what Qwen 3B produced (bless its heart). This script converts them 
-directly into the ChimeSemantics mapping format.
+directly into the CorallineSemantics mapping format.
 
 Qwen's output is not used. If we want a local model to refine further,
 we'd need 7B+ or a fine-tuned model.

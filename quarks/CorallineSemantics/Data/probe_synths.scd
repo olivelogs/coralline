@@ -1,11 +1,11 @@
 /*
-    ChimeSemantics Probing Script
+    CorallineSemantics Probing Script
     =============================
     Systematically sweeps every timbral parameter on every synth,
     records each step, and saves wav files for analysis.
 
     Run this after SuperDirt is loaded.
-    Output goes to: /Users/olivelo/chime/quarks/ChimeSemantics/Data/probes/
+    Output goes to: /Users/olivelo/coralline/quarks/CorallineSemantics/Data/probes/
 
     March 2026 — Olive + Claude
 
@@ -19,7 +19,7 @@
 
 (
 // === Configuration ===
-var outputBase = "/Users/olivelo/chime/quarks/ChimeSemantics/Data/probes";
+var outputBase = "/Users/olivelo/coralline/quarks/CorallineSemantics/Data/probes";
 var stepCount = 11;        // 0.0, 0.1, 0.2, ... 1.0
 var noteDur = 2.0;         // seconds per recording
 var pauseBetween = 0.5;    // seconds between recordings
@@ -192,7 +192,7 @@ synthSpecs.do { |spec|
     spec[1].do { totalProbes = totalProbes + stepCount };
 };
 
-"=== ChimeSemantics Probing ===".postln;
+"=== CorallineSemantics Probing ===".postln;
 "Total recordings to make: %".format(totalProbes).postln;
 "Estimated time: % minutes".format((totalProbes * (noteDur + pauseBetween) / 60).round(0.1)).postln;
 "Output: %".format(outputBase).postln;

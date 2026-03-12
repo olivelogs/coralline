@@ -1,5 +1,5 @@
 /*
-    ChimeSemantics — Semantic parameter mapping for agent-driven composition.
+    CorallineSemantics — Semantic parameter mapping for agent-driven composition.
 
     Translates perceptual dimensions (brightness, warmth, texture, etc.)
     into synth-specific parameter values.
@@ -8,34 +8,34 @@
 
     Usage:
         // After class library compiles, load the empirical mappings:
-        ChimeSemantics.loadRefined;
+        CorallineSemantics.loadRefined;
 
         // Resolve semantic params for a synth:
-        ChimeSemantics.resolve(\supervibe, \brightness, 0.7);
+        CorallineSemantics.resolve(\supervibe, \brightness, 0.7);
         // returns: [[\decay, 0.86], [\detune, 0.12], [\modamp, 0.15], ...]
 
         // Resolve a full set of semantic params:
-        ChimeSemantics.resolveAll(\supervibe, (\brightness: 0.7, \warmth: 0.4));
+        CorallineSemantics.resolveAll(\supervibe, (\brightness: 0.7, \warmth: 0.4));
         // returns: (\decay: 1.14, \modamp: 0.28, \velocity: 0.52, ...)
 
         // List available synths:
-        ChimeSemantics.synths;
+        CorallineSemantics.synths;
 
         // See what a synth can do:
-        ChimeSemantics.dimensionsFor(\supervibe);
+        CorallineSemantics.dimensionsFor(\supervibe);
 
         // Inspect full mapping:
-        ChimeSemantics.inspect(\supervibe);
+        CorallineSemantics.inspect(\supervibe);
 
         // Check which params affect pitch (avoid for timbral work):
-        ChimeSemantics.pitchControlsFor(\superpwm);
+        CorallineSemantics.pitchControlsFor(\superpwm);
 
     March 2026 — Olive + Claude
     Empirical mappings: 322 timbral curves across 27 SuperDirt synths,
     derived from probe sweeps + librosa analysis.
 */
 
-ChimeSemantics {
+CorallineSemantics {
 
     // Class variable: Dictionary of synth -> semantic mappings
     // Structure: synthName -> dimension -> Array of curve specs
@@ -77,7 +77,7 @@ ChimeSemantics {
         // Default path — adjust if your quarks live elsewhere
         defaultRefinedPath = (
             Platform.userAppSupportDir +/+
-            "downloaded-quarks/ChimeSemantics/Data/refined_mappings.json"
+            "downloaded-quarks/CorallineSemantics/Data/refined_mappings.json"
         );
 
         // Load hardcoded fallback mappings
@@ -100,8 +100,8 @@ ChimeSemantics {
         var file, jsonStr, data, synthCount = 0, curveCount = 0;
 
         if(File.exists(path).not) {
-            "ChimeSemantics: refined mappings not found at '%'".format(path).warn;
-            "ChimeSemantics: using default mappings only.".postln;
+            "CorallineSemantics: refined mappings not found at '%'".format(path).warn;
+            "CorallineSemantics: using default mappings only.".postln;
             ^this
         };
 
@@ -113,7 +113,7 @@ ChimeSemantics {
         data = jsonStr.parseYAML;
 
         if(data.isNil) {
-            "ChimeSemantics: failed to parse JSON at '%'".format(path).warn;
+            "CorallineSemantics: failed to parse JSON at '%'".format(path).warn;
             ^this
         };
 
@@ -159,7 +159,7 @@ ChimeSemantics {
         };
 
         refinedLoaded = true;
-        "ChimeSemantics: loaded % synths, % timbral curves from '%'".format(
+        "CorallineSemantics: loaded % synths, % timbral curves from '%'".format(
             synthCount, curveCount, PathName(path).fileName
         ).postln;
     }
@@ -298,13 +298,13 @@ ChimeSemantics {
 
         synthMap = mappings[synthName];
         if(synthMap.isNil) {
-            "ChimeSemantics: no mapping for synth '%'".format(synthName).warn;
+            "CorallineSemantics: no mapping for synth '%'".format(synthName).warn;
             ^[]  // return empty — agent can still use raw params
         };
 
         curves = synthMap[dimension];
         if(curves.isNil) {
-            "ChimeSemantics: synth '%' has no mapping for '%'".format(synthName, dimension).warn;
+            "CorallineSemantics: synth '%' has no mapping for '%'".format(synthName, dimension).warn;
             ^[]
         };
 
@@ -430,7 +430,7 @@ ChimeSemantics {
         var synthMap = mappings[synthName];
         var pcs;
         if(synthMap.isNil) {
-            "ChimeSemantics: no mapping for '%'".format(synthName).postln;
+            "CorallineSemantics: no mapping for '%'".format(synthName).postln;
             ^this
         };
         "".postln;
@@ -472,7 +472,7 @@ ChimeSemantics {
     *summary {
         var totalCurves = 0;
         "".postln;
-        "=== ChimeSemantics Summary ===".postln;
+        "=== CorallineSemantics Summary ===".postln;
         "  refined loaded: %".format(refinedLoaded).postln;
         "  synths: %".format(this.synths.size).postln;
         this.synths.do { |s|

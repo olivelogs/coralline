@@ -3,13 +3,13 @@
     Verify recording works before running the full sweep.
 
     Tests: supervibe modamp at 0.0, 0.5, 1.0
-    Output: /Users/olivelo/chime/quarks/ChimeSemantics/Data/probes/test/
+    Output: /Users/olivelo/coralline/quarks/CorallineSemantics/Data/probes/test/
 
     Run in SuperCollider after SuperDirt is loaded.
 */
 
 (
-var outputDir = "/Users/olivelo/chime/quarks/ChimeSemantics/Data/probes/test";
+var outputDir = "/Users/olivelo/coralline/quarks/CorallineSemantics/Data/probes/test";
 var noteDur = 2.0;
 var note = 0;  // C5
 
