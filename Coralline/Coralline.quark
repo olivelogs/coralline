@@ -1,0 +1,9 @@
+(
+    name: "Coralline",
+    summary: "Semantic parameter mapping and bidirectional OSC layer for AI agent ↔ SuperCollider communication",
+    version: "0.1.0",
+    schelp: "Coralline",
+    url: "https://github.com/olivelogs/coralline",
+    dependencies: [],
+    since: "2026-03-06"
+)
