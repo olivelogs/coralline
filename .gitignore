@@ -3,17 +3,12 @@
 
 # folders
 resources/
-samples/
 AVisualizer/
 .vscode/
 scd/docs/
 archive/
-skills/
 MCP2OSC/
 quarks/CorallineSemantics/Data/mapping
 quarks/CorallineSemantics/Data/probes
-
-# specific files
-package-lock.json
 
 

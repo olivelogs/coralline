@@ -26,7 +26,7 @@ CorallineSemantics.inspect(\supervibe);        // pretty-prints the mapping tabl
 // After SuperDirt is running:
 CorallineAgent.start;
 ```
-> could just put this in my startup file?
+> You can also put this in your SuperDirt startup file.
 
 ## Development workflow
 When you edit a .sc class file:
