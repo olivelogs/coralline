@@ -5,15 +5,13 @@
 resources/
 samples/
 AVisualizer/
-tmp/
-tidal/
 .vscode/
 scd/docs/
 archive/
 skills/
+MCP2OSC/
+quarks/CorallineSemantics/Data/mapping
 quarks/CorallineSemantics/Data/probes
-quarks/CorallineSemantics/Data/qwen_chunks
-quarks/CorallineSemantics/Data/qwen
 
 # specific files
 package-lock.json

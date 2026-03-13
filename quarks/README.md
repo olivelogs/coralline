@@ -1,20 +1,11 @@
 # Coralline Quarks — Setup Guide
 
-## Quick test (no install needed)
-Open SuperCollider, make sure SuperDirt is running, then:
-```
-File > Open > /Users/olivelo/coralline/quarks/test-semantics.scd
-```
-Select all, evaluate (Cmd+Enter). You should hear supervibe notes demonstrating brightness, warmth, and space changing.
-
-## Installing the quarks (for real)
-
-### 1. Tell SuperCollider where to find them
+### 1. Tell SuperCollider where to find quarks
 In SuperCollider, evaluate:
 ```supercollider
 // Add the coralline quarks directory to SC's search path
-Quarks.install("file:///Users/olivelo/coralline/quarks/CorallineSemantics");
-Quarks.install("file:///Users/olivelo/coralline/quarks/CorallineAgent");
+Quarks.install("file:///Users/.../coralline/quarks/CorallineSemantics");
+Quarks.install("file:///Users/.../coralline/quarks/CorallineAgent");
 ```
 
 ### 2. Recompile the class library

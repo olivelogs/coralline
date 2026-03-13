@@ -1,39 +1,81 @@
 # Coralline
 
-Coralline started as a project to make music with LLMs. After a few twists and turns, it became a way for LLMs to make music. 
-Now claude makes beeps and boops and it is delightful.
+Coralline gives Claude the ability to make music in real-time with SuperCollider, effectively translating dialogue into music. This should be used with the coralline-mcp. 
 
-This started in linking Sonic Pi through OSC. Using a sonic pi skill and OSC addresses, claude could send ruby to sonic pi to play music. After some experimentation and further learning, we decided Tidal would be more efficient and SuperCollider would be more adaptable for our purposes.
-
-That said - there is a steeper learning curve with Tidal/SuperCollider/SuperDirt. Sonic Pi was good for learning what the workflow would look like, but overall inefficient for agentic use and later goals.
-
-We are building a dedicated MCP for using this tooling. In chat, claude can send beeps and boops and, eventually, full compositions. The following goals were having raw analyzed audio data pong back through OSC. 
-(later, there's a robot involved, because why not)
-
-Current capabilities: Claude can send OSC messages using MCP2OSC to scsynth server SuperDirt. That is the extent of it.
-Current goals: two skills and a new OSC address space. Uncertain if a boilerplate like that was used in Sonic Pi is necessary. Getting claude to run TidalCycles patterning would be ideal (might be beyond what is possible in UI). 
-
-Skill 1: SuperDirt. 
-
-Skill 2: SynthDefs skill. 
-
-
-Requires:
-~~Sonic Pi software~~ not anymore!
-TidalCycles / SuperCollider / **SuperDirt**
-[MCP2OSC](https://github.com/yyf/MCP2OSC)
-modified [AVisualizer](https://github.com/JuzzyDee/AVisualizer) may not be necessary with SuperCollider, though the code may be useful for writing analysis output. Was necessary with Sonic Pi, but SC should be capable of outputting audio data?
-
-
-
+The quark package re-writes superdirt synthdefs to be agent-friendly - that is, SynthDef params are defined semantically and normalized. it requires superdirt to run.
 
 ---
 
-*"There is a music for lonely hearts nearly always. If the music dies down there is a silence. Almost the same as the movement of music. To know silence perfectly is to know music."*
-- Carl Sandburg
+## Dependencies:
+SuperCollider IDE
+SuperDirt
+coralline-mcp
 
+### Optional (highly recommended, very fun):
+TidalCycles
+This allows you to build on what Claude writes as loops.
 
-*"And on a thousand planets, with a thousand bodies and a thousand voices, she leapt in the air and filled the sky with lilting laughter, a chorus of joy that spanned the arm of a galaxy."*
-- Marc Stiegler
+---
 
+## What the quark does
 
+Coralline translates raw params into semantic definitions. When you say "make the sound brighter," Claude can adjust *brightness* rather than finding the right param to adjust, as each synth reacts differently to different params. We mapped param effects to semantic meaning, using curves derived from audio analysis. Eight dimensions of sound:
+
+| dimension   | description                                  |
+|-------------|----------------------------------------------|
+| brightness  | spectral energy distribution (dark ↔ bright) |
+| warmth      | harmonic richness, low-mid presence          |
+| texture     | smooth ↔ rough/noisy                         |
+| movement    | modulation rate, vibrato, LFO activity       |
+| space       | stereo width, detuning spread                |
+| weight      | low-frequency energy, body                   |
+| attack      | onset sharpness (soft ↔ percussive)          |
+
+Claude uses these instead of raw params to create more expressive sound through conversation. 
+
+---
+
+## Usage:
+1. Install SuperCollider IDE and SuperDirt, following their instructions. 
+
+2. Make sure coralline-mcp has been installed and Claude's config has been updated to reflect the MCP access and correct port (57120)
+
+3. Recompile in supercollider (cmd + shift + L on Mac)
+
+4. Run your startup file to start SuperDirt with `"Users/.../superdirt_startup.scd".load`
+
+4. Run this in SuperCollider (shift + enter per line on Mac)
+
+```supercollider
+CorallineSemantics.loadRefined;    // reads refined_mappings.json, replaces all mappings
+CorallineSemantics.summary;        // see what loaded, writes to post window
+CorallineAgent.start;              // start coralline
+```
+
+after running `CorallineAgent.start;` you should see this in the post window (ports may be different):
+```txt
+CorallineAgent: responders registered.
+CorallineAgent: listening on port 57120, replies to 127.0.0.1:9501
+CorallineAnalysis: audio analyzer started (listening on bus 0).
+```
+
+5. ask claude to play a sound with `/coralline/play`.
+
+6. That's it! Explore the tooling together, and if you downloaded TidalCycles, you can play alongside Claude.
+
+---
+
+### If you do not hear sound:
+- First just try run `Server.killAll` in supercollider, recompile (cmd + shift + L on Mac), and re-boot the server again. 
+- If that does not work, check that Claude's config is set up with the correct port (SuperDirt runs on port 57120)
+- SuperCollider handles raw audio, which doesn't always get along with bluetooth headphones. If you're running into trouble here, I recommend using your built-in speakers (check audio MIDI settings in Mac) and building from there.
+
+### note:
+i strongly recommend orienting yourself in the SuperCollider IDE if you have not used it before. Read through a few pages of the docs (which are displayed in the IDE) and learn how to run code inside the SCIDE. You don't need to know sclang to use these tools - but SuperCollider is the backbone of the tooling, so you'll be in there often!
+
+---
+
+what's missing in v0.1
+- fx 
+- sample reference list
+- superfm synth - it's a beast
