@@ -1,18 +1,18 @@
-# Coralline
+# coralline (v0.1.0)
 
-Coralline gives Claude the ability to make music in real-time with SuperCollider, effectively translating dialogue into music. This should be used with the coralline-mcp. 
+Coralline gives Claude the ability to make music in real-time with SuperCollider, effectively translating dialogue into music. This should be used with the coralline-mcp.  
 
-The quark package re-writes superdirt synthdefs to be agent-friendly - that is, SynthDef params are defined semantically and normalized. it requires superdirt to run.
+The quark package re-writes the base SuperDirt SynthDefs to be agent-friendly - that is, SynthDef params are defined semantically and normalized. It requires superdirt to run.  
 
 ---
 
 ## Dependencies:
-SuperCollider IDE
-SuperDirt
-coralline-mcp
+- [SuperCollider IDE](https://supercollider.github.io/)
+- [SuperDirt](https://codeberg.org/musikinformatik/SuperDirt) - note that is much easier to just download the entire TidalCycles package to get SuperDirt working correctly
+- coralline-mcp
 
 ### Optional (highly recommended, very fun):
-TidalCycles
+- [TidalCycles](https://tidalcycles.org/)  
 This allows you to build on what Claude writes as loops.
 
 ---
@@ -40,11 +40,21 @@ Claude uses these instead of raw params to create more expressive sound through 
 
 2. Make sure coralline-mcp has been installed and Claude's config has been updated to reflect the MCP access and correct port (57120)
 
-3. Recompile in supercollider (cmd + shift + L on Mac)
+3. Install the quarks:
 
-4. Run your startup file to start SuperDirt with `"Users/.../superdirt_startup.scd".load`
+```supercollider
+// Add the coralline quarks directory to SC's search path
+Quarks.install("file:///Users/.../coralline/quarks/CorallineSemantics");
+Quarks.install("file:///Users/.../coralline/quarks/CorallineAgent");
+```
 
-4. Run this in SuperCollider (shift + enter per line on Mac)
+See [setup guide](https://github.com/olivelogs/coralline/tree/main/quarks#readme) for a more detailed walkthrough.  
+
+4. Recompile in supercollider (cmd + shift + L on Mac)
+
+5. Run your startup file to start SuperDirt with `"Users/.../superdirt_startup.scd".load`
+
+6. Run this in SuperCollider (shift + enter per line on Mac)
 
 ```supercollider
 CorallineSemantics.loadRefined;    // reads refined_mappings.json, replaces all mappings
@@ -52,16 +62,16 @@ CorallineSemantics.summary;        // see what loaded, writes to post window
 CorallineAgent.start;              // start coralline
 ```
 
-after running `CorallineAgent.start;` you should see this in the post window (ports may be different):
+After running `CorallineAgent.start;` you should see this in the post window (ports may be different):
 ```txt
 CorallineAgent: responders registered.
 CorallineAgent: listening on port 57120, replies to 127.0.0.1:9501
 CorallineAnalysis: audio analyzer started (listening on bus 0).
 ```
 
-5. ask claude to play a sound with `/coralline/play`.
+7. Ask claude to play a sound with `/coralline/play`.
 
-6. That's it! Explore the tooling together, and if you downloaded TidalCycles, you can play alongside Claude.
+That's it! Explore the tooling together, and if you downloaded TidalCycles, you can play alongside Claude.
 
 ---
 
