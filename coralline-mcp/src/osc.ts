@@ -4,7 +4,7 @@ import type { AudioPong, PendingPong, StatePong } from "./types.js";
 
 const SC_HOST = "127.0.0.1";
 const SC_PORT = 57120;
-const LISTEN_PORT = 9501;
+const LISTEN_PORT = 9601;
 const PONG_TIMEOUT_MS = Number(process.env.CORALLINE_PONG_TIMEOUT_MS) || 5000;
 
 // ---- OSC Client (fire-and-forget sender) ----
