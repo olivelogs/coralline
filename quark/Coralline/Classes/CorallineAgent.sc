@@ -47,7 +47,7 @@ CorallineAgent {
         isRunning = false;
     }
 
-    *start { |listenPort = 57120, replyPort = 9501, replyHost = "127.0.0.1"|
+    *start { |listenPort = 57120, replyPort = 9601, replyHost = "127.0.0.1"|
         if(isRunning) {
             "CorallineAgent: already running. Call .stop first.".warn;
             ^this
