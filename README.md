@@ -6,8 +6,8 @@ The MCP provides a set of tools for an agent to interact with SuperCollider, suc
 
 The quark enables AI agents to interact with SuperDirt synths. There are three classes: CorallineAgent, CorallineSemantics, and CorallineAnalysis.  
 
-- **ChimeAgent** defines how the agent can use OSC to interact with the SuperDirt server.  
-- **ChimeAnalysis** defines audio analysis behavior, which an agent can request to "hear" the music.  
+- **CorallineAgent** defines how the agent can use OSC to interact with the SuperDirt server.  
+- **CorallineAnalysis** defines audio analysis behavior, which an agent can request to "hear" the music.  
 - **CorallineSemantics** resolves the base SuperDirt Synthdefs to be agent-friendly - that is, Synthdefs are routed through it, and params are resolved into semantic dimensions. It requires superdirt to run.  
 
 ---
