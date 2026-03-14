@@ -80,6 +80,8 @@ v0.1.0 exposes nine tools to Claude:
 **However, these won't be usable without the Quarks!**
 
 ### Setup the quarks
+*See the demo videos at the end of the README for a quark installation walkthrough in SCIDE*  
+
 In the SuperCollider IDE, before starting the SuperDirt server, add the coralline quarks directory to SC's search path and tell SuperCollider to manage it:
 ```supercollider
 Quarks.install("file:///Users/.../coralline/quark/Coralline");
@@ -158,16 +160,17 @@ CorallineAnalysis: audio analyzer started (listening on bus 0).
 
 ---
 
-### If you do not hear sound when Claude sends an OSC message:
+### Troubleshooting:
+#### If you do not hear sound in SuperCollider
 - First just run `s.quit`, then `Server.killAll` in SCIDE. Recompile (cmd + shift + L on Mac), and re-boot the SuperDirt server from the startup file again. 
 - If that does not work, check that SuperDirt and CorallineAgent are running on the correct port (`57120`). I am working on adjusting the MCP to make ports configurable in case this happens.
 - SuperCollider handles raw audio, which doesn't always get along with bluetooth headphones. If you're running into trouble here, I recommend using your built-in speakers (check audio MIDI settings in Mac) and building from there.
 
-### note:
+### Using SuperCollider
 I strongly recommend orienting yourself in the SuperCollider IDE if you have not used it before. Read through a few pages of the docs (which are displayed in the IDE) and learn how to run code inside the SCIDE. You don't need to know sclang to use these tools - but SuperCollider is the backbone of the tooling, so you'll be in there often!
 
-### Another note:
-- To stop a loop, run Cmd + . (Mac) in SCIDE
+### Stopping loops:
+To stop a loop, run Cmd + . (Mac) in SCIDE
 
 ### Acknowledgements
 Building this would not have been possible without these amazing tools:
@@ -193,34 +196,8 @@ Coralline seeks to capture musical intent by translating raw params into semanti
 Claude uses these instead of raw params to create more expressive sound through conversation. Raw params can still be passed with a pipe `|` separator. These override semantics. 
 
 ---
+## Videos
+### Quark installation
 
-## Directory structure
 
-```txt
-coralline/
-├── coralline-mcp/
-│   └── src/
-│       ├── index.ts            ← server entry, tool registration, startup
-│       ├── types.ts            ← shared TypeScript types
-│       ├── osc.ts              ← OscClient (sender) + OscServer (FIFO pong resolver)
-│       ├──  logger.ts          ← JSONL append logger with rotation
-│       └──  tools/
-│             ├── play.ts               ← play tool
-│             ├── loops.ts              ← loop_start, loop_stop
-│             ├── phrase.ts             ← phrase tool
-│             ├── analysis.ts           ← get_state, get_audio
-│             ├── synths.ts             ← list_synths, get_synth_info
-│             └── fx.ts                 ← get_fx
-│
-├── quark
-│   └── Coralline
-│       ├── Coralline.quark                  ← package metadata
-│       └── Classes     
-│           ├── CorallineSemantics.sc        ← the mapping engine
-│           ├── CorallineAgent.sc            ← OSC routing, loops, ping/pong
-│           ├── CorallineAnalysis.sc         ← real-time audio analysis    
-│           └── Data/                           
-│               ├── refined_mappings.json 
-│               └── effects.json  
-```
-  
+### Demo
