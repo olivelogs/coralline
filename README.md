@@ -45,9 +45,6 @@ To Claude's config, add:
     "coralline": {
       "command": "node",
       "args": ["/Users/olivelo/MCPs/coralline-mcp/dist/index.js"],
-      "env":{
-        "CORALLINE_PONG_TIMEOUT_MS": 500
-      }
     }
   }
 }
