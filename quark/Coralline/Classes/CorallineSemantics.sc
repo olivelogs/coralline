@@ -37,6 +37,8 @@
 
 CorallineSemantics {
 
+	var classDir, refinedPath;
+
     // Class variable: Dictionary of synth -> semantic mappings
     // Structure: synthName -> dimension -> Array of curve specs
     classvar <mappings;
@@ -57,7 +59,9 @@ CorallineSemantics {
     classvar <defaultRefinedPath;
 
     *initClass {
-        // Define our semantic dimensions
+		var classDir, refinedPath;
+
+		// Define our semantic dimensions
         dimensions = #[
             \brightness,   // spectral energy distribution (dark ↔ bright)
             \warmth,       // harmonic richness, low-mid presence
@@ -74,11 +78,10 @@ CorallineSemantics {
         needsReview = IdentityDictionary.new;
         refinedLoaded = false;
 
-        // Default path — adjust if your quarks live elsewhere
-        defaultRefinedPath = (
-            Platform.userAppSupportDir +/+
-            "/coralline/quark/Coralline/Data/refined_mappings.json"
-        );
+        classDir = this.class.filenameSymbol.asString.dirname;
+        refinedPath = classDir +/+ "../Data/refined_mappings.json";
+        defaultRefinedPath = PathName(refinedPath).fullPath;
+
 
         // Load hardcoded fallback mappings
         this.loadDefaultMappings;
