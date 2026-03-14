@@ -8,7 +8,6 @@ import { registerFxTool } from "./tools/fx.js";
 import { registerLoopTools } from "./tools/loops.js";
 import { registerPhraseTool } from "./tools/phrase.js";
 import { registerPlayTool } from "./tools/play.js";
-import { registerOscTestTool } from "./tools/osc_test.js";
 import { registerSynthTools } from "./tools/synths.js";
 
 const logger = new Logger();
@@ -39,7 +38,6 @@ registerPhraseTool(server, oscClient);
 registerAnalysisTools(server, oscClient, oscServer);
 registerSynthTools(server);
 registerFxTool(server);
-registerOscTestTool(server, oscClient);
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
