@@ -4,12 +4,11 @@ Coralline is a system for AI agents to compose and perform music through SuperCo
 
 ## Architecture
 
-Three SuperCollider quarks (two in development, one future):
+One supercollider quark with three classes:
 
 - **CorallineSemantics** (`quark/Coralline/Classes/CorallineSemantics.sc`) — Semantic parameter mapping engine. Maps 7 perceptual dimensions (brightness, warmth, texture, movement, space, weight, attack) normalized 0-1 to synth-specific params with weighted curves. Currently has empirically validated mappings for supervibe, supersaw, superpiano.
 - **CorallineAgent** (`quark/Coralline/Classes/CorallineAgent.sc`) — Bidirectional OSC layer. Handles `/coralline/play` (semantic), `/coralline/raw` (bypass), `/coralline/loop/*` (JITLib/Pdef patterns), and `/coralline/ping/*` (state queries). Supports `|` pipe separator to mix semantic + raw params.
 - **CorallineAnalysis** (`quark/Coralline/Classes/CorallineAnalysis.sc`) — Real-time audio analysis. FFT-based analyzer providing rms, spectral centroid, flatness, pitch, and pitch confidence. Uses a callback pattern to decouple from OSC transport.
-- **CorallineDirt** (future) — Custom SynthDefs designed natively for the semantic layer.
 
 **coralline-mcp** (`coralline-mcp/`) — TypeScript MCP server bridging Claude to SuperCollider via OSC. Reads synth mappings and effects data from `quark/Coralline/Data/`. The old generic MCP2OSC bridge is archived in `resources/MCP2OSC/`.
 
