@@ -1,0 +1,8 @@
+# OS Junk
+.DS_Store
+
+# folders
+resources/
+node_modules/
+dist/
+logs/

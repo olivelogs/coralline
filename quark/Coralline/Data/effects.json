@@ -1,0 +1,88 @@
+{
+  "categories": [
+    {
+      "category": "filters",
+      "params": [
+        { "param": "lpf", "description": "Low pass filter cutoff", "range": "20–20000 Hz", "notes": "Removes highs. Lower = darker." },
+        { "param": "hpf", "description": "High pass filter cutoff", "range": "20–20000 Hz", "notes": "Removes lows. Higher = thinner." },
+        { "param": "bpf", "description": "Bandpass filter cutoff", "range": "20–20000 Hz", "notes": "Isolates a frequency band." },
+        { "param": "djf", "description": "DJ filter (combined LP/HP)", "range": "0.0–1.0", "notes": "0–0.5 = lowpass, 0.5–1.0 = highpass. Center = no filter." }
+      ]
+    },
+    {
+      "category": "space",
+      "params": [
+        { "param": "room", "description": "Reverb room size", "range": "0.0–1.0", "notes": "0 = dry, 1 = huge space." },
+        { "param": "size", "description": "Reverb decay time", "range": "0.0–1.0", "notes": "How long the reverb rings. Use with room." },
+        { "param": "dry", "description": "Dry signal level", "range": "0.0–1.0", "notes": "1 = full dry signal (default)." },
+        { "param": "delay", "description": "Delay send level", "range": "0.0–1.0", "notes": "Amount sent to delay effect." },
+        { "param": "delaytime", "description": "Delay time", "range": "0.0–1.0", "notes": "In seconds (or fractions of cycle)." },
+        { "param": "delayfeedback", "description": "Delay feedback", "range": "0.0–1.0", "notes": "How much delay feeds back. >0.9 = danger." },
+        { "param": "pan", "description": "Stereo position", "range": "-1.0–1.0", "notes": "-1 = left, 0 = center, 1 = right." }
+      ]
+    },
+    {
+      "category": "dynamics",
+      "params": [
+        { "param": "gain", "description": "Overall volume", "range": "0.0–2.0", "notes": "1.0 = default. >1.5 may clip." },
+        { "param": "cThresh", "description": "Compressor threshold", "range": "0.00001–1.0", "notes": "Smaller = affects quieter parts." },
+        { "param": "cRatio", "description": "Compression ratio", "range": "1–20", "notes": "4 = default. Higher = more squash." },
+        { "param": "cAttack", "description": "Compressor attack", "range": "0.001–0.5 s", "notes": "How fast it reacts." },
+        { "param": "cRelease", "description": "Compressor release", "range": "0.01–1.0 s", "notes": "How fast it lets go." },
+        { "param": "cGain", "description": "Compressor output gain", "range": "0.0–2.0", "notes": "Makeup gain after compression." }
+      ]
+    },
+    {
+      "category": "distortion",
+      "params": [
+        { "param": "distort", "description": "Crunchy crossover distortion", "range": "0.0–1.0", "notes": "Lots of high harmonics." },
+        { "param": "triode", "description": "Triode tube-like distortion", "range": "0.0–4.0", "notes": "Asymmetric warmth." },
+        { "param": "krush", "description": "Bitcrusher", "range": "0.0–5.0", "notes": "0 = clean, higher = crunchier." },
+        { "param": "kcutoff", "description": "Krush filter cutoff", "range": "20–10000 Hz", "notes": "Paired with krush. Default 4000." },
+        { "param": "squiz", "description": "Pitch-ratio ring-mod-filter hybrid", "range": "1.0–10.0", "notes": "1 = dry. Gets weird fast." }
+      ]
+    },
+    {
+      "category": "frequency",
+      "params": [
+        { "param": "fshift", "description": "Frequency shift", "range": "-1000–1000 Hz", "notes": "Shifts all frequencies. Metallic at extremes." },
+        { "param": "fshiftnote", "description": "Freq shift relative to note", "range": "0.0–2.0", "notes": "Multiplied by current note frequency." },
+        { "param": "fshiftphase", "description": "Freq shift phase", "range": "0.0–1.0" },
+        { "param": "ring", "description": "Ring modulation amount", "range": "0.0–1.0" },
+        { "param": "ringf", "description": "Ring mod frequency", "range": "20–10000 Hz" },
+        { "param": "ringdf", "description": "Ring mod frequency slide", "range": "-1000–1000", "notes": "Slides ringf over time." }
+      ]
+    },
+    {
+      "category": "octave",
+      "params": [
+        { "param": "octer", "description": "Octave harmonics", "range": "0.0–1.0", "notes": "Adds upper octave." },
+        { "param": "octersub", "description": "Sub-octave (half freq)", "range": "0.0–1.0", "notes": "Adds lower octave." },
+        { "param": "octersubsub", "description": "Sub-sub-octave (quarter freq)", "range": "0.0–1.0", "notes": "Two octaves down." }
+      ]
+    },
+    {
+      "category": "spectral",
+      "params": [
+        { "param": "freeze", "description": "Spectral freeze", "range": "0 or 1", "notes": "Freezes the spectrum in place." },
+        { "param": "smear", "description": "Spectral smear", "range": "0.0–1.0", "notes": "Blurs frequency bins. Dreamy." },
+        { "param": "comb", "description": "Spectral comb filter", "range": "0.0–1.0", "notes": "Metallic resonances." },
+        { "param": "scram", "description": "Spectral scramble", "range": "0.0–1.0", "notes": "Randomizes frequency bins. Chaotic." },
+        { "param": "binshift", "description": "Spectral bin shift", "range": "0.0–1.0", "notes": "Stretches/shifts spectrum." },
+        { "param": "hbrick", "description": "Spectral highpass (brick wall)", "range": "0.0–1.0", "notes": "Hard spectral cutoff." },
+        { "param": "lbrick", "description": "Spectral lowpass (brick wall)", "range": "0.0–1.0", "notes": "Hard spectral cutoff from above." },
+        { "param": "enhance", "description": "Spectral enhance", "range": "0.0–1.0", "notes": "Adds harmonics. Can go wild." },
+        { "param": "real", "description": "Conformal map (real part)", "range": "0.0–1.0", "notes": "Warps spectrum. Experimental." },
+        { "param": "imag", "description": "Conformal map (imaginary part)", "range": "0.0–1.0", "notes": "Warps spectrum. Experimental." },
+        { "param": "waveloss", "description": "Discard zero-crossing segments", "range": "1–100", "notes": "Higher = more signal lost. Glitchy." }
+      ]
+    }
+  ],
+  "quick_combos": [
+    { "name": "Warm lo-fi", "params": "krush 2 kcutoff 3000 room 0.3" },
+    { "name": "Spacey pad", "params": "room 0.8 size 0.9 delay 0.4 delaytime 0.3" },
+    { "name": "Aggressive lead", "params": "distort 0.6 hpf 200 lpf 8000" },
+    { "name": "Glitch texture", "params": "waveloss 40 scram 0.3 freeze 1" },
+    { "name": "Sub bass thump", "params": "lpf 200 octer 0 octersub 0.8" }
+  ]
+}

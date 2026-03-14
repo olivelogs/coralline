@@ -77,7 +77,7 @@ CorallineSemantics {
         // Default path — adjust if your quarks live elsewhere
         defaultRefinedPath = (
             Platform.userAppSupportDir +/+
-            "downloaded-quarks/CorallineSemantics/Data/refined_mappings.json"
+            "/Users/olivelo/coralline/quark/Coralline/Data/refined_mappings.json"
         );
 
         // Load hardcoded fallback mappings
