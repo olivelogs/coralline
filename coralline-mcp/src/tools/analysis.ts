@@ -47,7 +47,7 @@ export function registerAnalysisTools(
     "get_audio",
     "Query real-time audio analysis from SuperCollider: RMS level, spectral centroid (brightness in Hz), " +
       "spectral flatness (0=tonal, 1=noisy), pitch frequency, and pitch detection confidence. " +
-      "Sends a ping and waits up to 2 seconds for a reply. Returns an error if SC is not running.",
+      "Sends a ping and waits up to 5 seconds for a reply. Returns an error if SC is not running.",
     {},
     async () => {
       const reqId = randomUUID();
