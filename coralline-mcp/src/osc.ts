@@ -1,4 +1,6 @@
-import { Client, Server } from "node-osc";
+import { Client } from "node-osc";
+import { createSocket, type Socket } from "node:dgram";
+import { fromBuffer } from "osc-min";
 import type { Logger } from "./logger.js";
 import type { AudioPong, PendingPong, StatePong } from "./types.js";
 
@@ -33,9 +35,12 @@ export class OscClient {
       req_id: reqId,
     });
 
-    this.client.send({ address: path, args } as Parameters<Client["send"]>[0], (err) => {
-      if (err) console.error("[osc] send error:", err);
-    });
+    this.client.send(
+      { address: path, args } as unknown as Parameters<Client["send"]>[0],
+      (err) => {
+        if (err) console.error("[osc] send error:", err);
+      }
+    );
   }
 
   close(): void {
@@ -43,81 +48,154 @@ export class OscClient {
   }
 }
 
-// ---- OSC Server (pong listener) ----
+// ---- OSC Server (pong listener via dgram + osc-min) ----
+// Uses exclusive binding to prevent zombie process port conflicts.
 
 export class OscServer {
-  private server: Server;
+  private socket: Socket;
   private stateQueue: PendingPong<StatePong>[] = [];
   private audioPending: Map<string, PendingPong<AudioPong>> = new Map();
 
   constructor(private readonly logger: Logger) {
-    this.server = new Server(LISTEN_PORT, "0.0.0.0", () => {
-      console.error(`[osc] listening on port ${LISTEN_PORT}`);
+    this.socket = createSocket({ type: "udp4", reuseAddr: false });
+
+    this.socket.on("message", (buf, rinfo) => {
+      try {
+        const parsed = fromBuffer(buf);
+        if (parsed.oscType !== "message") return;
+
+        const path = parsed.address;
+        const args = parsed.args.map(
+          (a: { value: string | number }) => a.value
+        ) as (string | number)[];
+
+        this.handleMessage(path, args, rinfo);
+      } catch (err) {
+        console.error("[osc] parse error:", (err as Error).message);
+      }
     });
 
-    this.server.on("message", (msg: unknown[]) => {
-      this.handleMessage(msg as [string, ...unknown[]]);
-    });
-
-    this.server.on("error", (err: Error & { code?: string }) => {
+    this.socket.on("error", (err: Error & { code?: string }) => {
       if (err.code === "EADDRINUSE") {
         console.error(
           `[osc] FATAL: port ${LISTEN_PORT} already in use. ` +
-          `Kill stale processes: lsof -i UDP:${LISTEN_PORT} -t | xargs kill`
+            `Kill stale processes: lsof -i UDP:${LISTEN_PORT} -t | xargs kill`
         );
         process.exit(1);
       }
       console.error("[osc] server error:", err.message);
     });
+
+    this.socket.bind(
+      { port: LISTEN_PORT, address: "0.0.0.0", exclusive: true },
+      () => {
+        console.error(`[osc] listening on port ${LISTEN_PORT} (exclusive)`);
+      }
+    );
   }
 
-  private handleMessage(msg: [string, ...unknown[]]): void {
-    const [path, ...rawArgs] = msg;
-    const args = rawArgs as (string | number)[];
-
+  private handleMessage(
+    path: string,
+    args: (string | number)[],
+    rinfo: { address: string; port: number }
+  ): void {
     this.logger.log({
       ts: new Date().toISOString(),
       dir: "in",
-      src_addr: "127.0.0.1",
-      src_port: SC_PORT,
+      src_addr: rinfo.address,
+      src_port: rinfo.port,
       dst_addr: "127.0.0.1",
       dst_port: LISTEN_PORT,
       path,
       args,
-      req_id: null, // filled in by awaitXxxPong resolution
+      req_id: null,
     });
 
-    if (path === "/coralline/pong/state" && this.stateQueue.length > 0) {
+    if (path === "/coralline/pong/state") {
+      console.error(
+        `[osc] state pong received; queue_len=${this.stateQueue.length}; args=${JSON.stringify(args)}`
+      );
+
+      if (this.stateQueue.length === 0) {
+        console.error("[osc] state pong dropped; no pending state request");
+        return;
+      }
+
       const pending = this.stateQueue.shift()!;
-      clearTimeout(pending.timer);
-      pending.resolve(this.parseStatePong(args));
+      try {
+        clearTimeout(pending.timer);
+        const parsed = this.parseStatePong(args);
+        console.error(
+          `[osc] resolving state pong; parsed=${JSON.stringify(parsed)}`
+        );
+        pending.resolve(parsed);
+      } catch (err) {
+        console.error(
+          `[osc] state pong resolution failed: ${(err as Error).stack ?? (err as Error).message}`
+        );
+        pending.reject(err as Error);
+      }
     } else if (path === "/coralline/pong/audio") {
       const kv = this.parseKV(args);
       const reqId = kv["reqId"] as string | undefined;
-      if (reqId && this.audioPending.has(reqId)) {
-        const pending = this.audioPending.get(reqId)!;
-        this.audioPending.delete(reqId);
-        clearTimeout(pending.timer);
-        pending.resolve(this.parseAudioPong(args));
+
+      console.error(
+        `[osc] audio pong received; reqId=${reqId ?? "missing"}; pending_keys=${JSON.stringify([...this.audioPending.keys()])}; args=${JSON.stringify(args)}`
+      );
+
+      if (!reqId) {
+        console.error("[osc] audio pong ignored; reqId missing");
+        return;
       }
-      // Pongs without reqId (e.g. continuous listening) are silently ignored
+
+      if (!this.audioPending.has(reqId)) {
+        console.error(`[osc] audio pong dropped; no pending request for reqId=${reqId}`);
+        return;
+      }
+
+      const pending = this.audioPending.get(reqId)!;
+      this.audioPending.delete(reqId);
+
+      try {
+        clearTimeout(pending.timer);
+        const parsed = this.parseAudioPong(args);
+        console.error(
+          `[osc] resolving audio pong; reqId=${reqId}; parsed=${JSON.stringify(parsed)}`
+        );
+        pending.resolve(parsed);
+      } catch (err) {
+        console.error(
+          `[osc] audio pong resolution failed for reqId=${reqId}: ${(err as Error).stack ?? (err as Error).message}`
+        );
+        pending.reject(err as Error);
+      }
     }
   }
 
   awaitStatePong(reqId: string): Promise<StatePong> {
     return new Promise((resolve, reject) => {
+      console.error(
+        `[osc] registering state pong waiter; reqId=${reqId}; queue_len_before=${this.stateQueue.length}`
+      );
       const timer = setTimeout(() => {
         const idx = this.stateQueue.findIndex((p) => p.timer === timer);
         if (idx !== -1) this.stateQueue.splice(idx, 1);
-        reject(new Error(`Timed out waiting for /coralline/pong/state (${PONG_TIMEOUT_MS}ms). Is SuperCollider running?`));
+        console.error(
+          `[osc] state pong timeout; reqId=${reqId}; queue_len_after=${this.stateQueue.length}`
+        );
+        reject(
+          new Error(
+            `Timed out waiting for /coralline/pong/state (${PONG_TIMEOUT_MS}ms). Is SuperCollider running?`
+          )
+        );
       }, PONG_TIMEOUT_MS);
 
-      // Patch req_id onto log entry when pong arrives — done inline in handleMessage
-      // For now store reqId in closure so we can associate it on resolve
       const origResolve = resolve;
       this.stateQueue.push({
         resolve: (val) => {
-          // Re-log with req_id attached for traceability
+          console.error(
+            `[osc] state pong resolved; reqId=${reqId}; queue_len_now=${this.stateQueue.length}`
+          );
           this.logger.log({
             ts: new Date().toISOString(),
             dir: "in",
@@ -134,19 +212,35 @@ export class OscServer {
         reject,
         timer,
       });
+      console.error(
+        `[osc] state pong waiter registered; reqId=${reqId}; queue_len_after=${this.stateQueue.length}`
+      );
     });
   }
 
   awaitAudioPong(reqId: string): Promise<AudioPong> {
     return new Promise((resolve, reject) => {
+      console.error(
+        `[osc] registering audio pong waiter; reqId=${reqId}; pending_count_before=${this.audioPending.size}`
+      );
       const timer = setTimeout(() => {
         this.audioPending.delete(reqId);
-        reject(new Error(`Timed out waiting for /coralline/pong/audio (${PONG_TIMEOUT_MS}ms). Is SuperCollider running?`));
+        console.error(
+          `[osc] audio pong timeout; reqId=${reqId}; pending_count_after=${this.audioPending.size}`
+        );
+        reject(
+          new Error(
+            `Timed out waiting for /coralline/pong/audio (${PONG_TIMEOUT_MS}ms). Is SuperCollider running?`
+          )
+        );
       }, PONG_TIMEOUT_MS);
 
       const origResolve = resolve;
       this.audioPending.set(reqId, {
         resolve: (val) => {
+          console.error(
+            `[osc] audio pong resolved; reqId=${reqId}; pending_count_now=${this.audioPending.size}`
+          );
           this.logger.log({
             ts: new Date().toISOString(),
             dir: "in",
@@ -163,11 +257,14 @@ export class OscServer {
         reject,
         timer,
       });
+      console.error(
+        `[osc] audio pong waiter registered; reqId=${reqId}; pending_count_after=${this.audioPending.size}`
+      );
     });
   }
 
   close(): void {
-    this.server.close();
+    this.socket.close();
   }
 
   // ---- Pong parsers ----

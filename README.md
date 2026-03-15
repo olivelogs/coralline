@@ -165,6 +165,8 @@ CorallineAnalysis: audio analyzer started (listening on bus 0).
 - First just run `s.quit`, then `Server.killAll` in SCIDE. Recompile (cmd + shift + L on Mac), and re-boot the SuperDirt server from the startup file again. 
 - If that does not work, check that SuperDirt and CorallineAgent are running on the correct port (`57120`). I am working on adjusting the MCP to make ports configurable in case this happens.
 - SuperCollider handles raw audio, which doesn't always get along with bluetooth headphones. If you're running into trouble here, I recommend using your built-in speakers (check audio MIDI settings in Mac) and building from there.
+#### If pong is not working
+- MacOS allows multiple UDP sockets to run on a port. Run `lsof -i UDP:9601` in terminal to clear processes.
 
 ### Using SuperCollider
 I strongly recommend orienting yourself in the SuperCollider IDE if you have not used it before. Read through a few pages of the docs (which are displayed in the IDE) and learn how to run code inside the SCIDE. You don't need to know sclang to use these tools - but SuperCollider is the backbone of the tooling, so you'll be in there often!
