@@ -12,18 +12,7 @@ import { registerSynthTools } from "./tools/synths.js";
 
 const logger = new Logger();
 
-// OscServer constructor binds the UDP port — fail fast if occupied.
-let oscServer: OscServer;
-try {
-  oscServer = new OscServer(logger);
-} catch (err) {
-  console.error(
-    "Fatal: failed to bind OSC listener on port 9501.",
-    "Is another coralline-mcp instance running?",
-    (err as Error).message
-  );
-  process.exit(1);
-}
+const oscServer = new OscServer(logger);
 
 const oscClient = new OscClient(logger);
 

@@ -87,6 +87,7 @@ export interface AudioPong {
   flatness: number;
   freq: number;
   hasFreq: number;
+  onsetRate: number;
 }
 
 // ---- Pending pong (FIFO queue entries) ----

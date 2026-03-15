@@ -46,14 +46,14 @@ export function registerAnalysisTools(
   server.tool(
     "get_audio",
     "Query real-time audio analysis from SuperCollider: RMS level, spectral centroid (brightness in Hz), " +
-      "spectral flatness (0=tonal, 1=noisy), pitch frequency, and pitch detection confidence. " +
+      "spectral flatness (0=tonal, 1=noisy), pitch frequency, pitch detection confidence, and beat onset detection. " +
       "Sends a ping and waits up to 5 seconds for a reply. Returns an error if SC is not running.",
     {},
     async () => {
       const reqId = randomUUID();
       try {
         const pongPromise = oscServer.awaitAudioPong(reqId);
-        oscClient.send("/coralline/ping/audio", [], reqId);
+        oscClient.send("/coralline/ping/audio", [reqId], reqId);
         const pong = await pongPromise;
 
         const result = {
@@ -62,6 +62,7 @@ export function registerAnalysisTools(
           flatness: pong.flatness,
           freq_hz: pong.freq,
           has_pitch: pong.hasFreq === 1,
+          onset_rate: pong.onsetRate,
         };
 
         return {

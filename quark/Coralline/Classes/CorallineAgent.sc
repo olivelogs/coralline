@@ -30,7 +30,7 @@
 //        CorallineAgent.stop;
 //
 //        // With custom ports:
-//        CorallineAgent.start(listenPort: 57120, replyPort: 9000);
+//        CorallineAgent.start(listenPort: 57120, replyPort: 9601);
 //
 //    March 2026 — Olive + Claude
 
@@ -58,14 +58,18 @@ CorallineAgent {
         this.registerResponders;
 
         // Set up audio analysis with pong callback
-        CorallineAnalysis.pongCallback = { |a|
-            replyAddr.sendMsg('/coralline/pong/audio',
-                "rms",      a[\rms],
-                "centroid", a[\centroid],
-                "flatness", a[\flatness],
-                "freq",     a[\freq],
-                "hasFreq",  a[\hasFreq]
-            );
+        // reqId is threaded through from ping → pong for request matching
+        CorallineAnalysis.pongCallback = { |a, reqId|
+            var msg = ['/coralline/pong/audio',
+                "rms",       a[\rms],
+                "centroid",  a[\centroid],
+                "flatness",  a[\flatness],
+                "freq",      a[\freq],
+                "hasFreq",   a[\hasFreq],
+                "onsetRate", a[\onsetRate]
+            ];
+            if(reqId.notNil) { msg = msg ++ ["reqId", reqId] };
+            replyAddr.sendMsg(*msg);
         };
         CorallineAnalysis.startAnalyzer;
 
@@ -178,7 +182,8 @@ CorallineAgent {
         // Returns /coralline/pong/audio with rms, centroid, flatness, freq, hasFreq
         oscResponders = oscResponders.add(
             OSCdef(\corallinePingAudio, { |msg, time, addr, recvPort|
-                CorallineAnalysis.handlePingAudio;
+                var reqId = if(msg.size > 1) { msg[1].asString } { nil };
+                CorallineAnalysis.handlePingAudio(reqId);
             }, '/coralline/ping/audio')
         );
 

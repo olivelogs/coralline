@@ -6,6 +6,7 @@
 //      - flatness (0=tonal, 1=noisy)
 //      - freq (detected pitch in Hz)
 //      - hasFreq (pitch detection confidence)
+//      - onsetRate (transient density in onsets/second)
 //
 //    Uses a callback pattern for sending results — set pongCallback
 //    to receive analysis Events without coupling to any OSC layer.
@@ -26,6 +27,10 @@ CorallineAnalysis {
     classvar <listenRate;       // Pong rate in Hz when listening
     classvar <>pongCallback;    // Function receiving analysis Event
 
+    // Onset rate tracking (sclang-side state)
+    classvar <lastOnsetCount;
+    classvar <lastOnsetTime;
+
     *initClass {
         analyzerSynth = nil;
         analyzerBuses = nil;
@@ -33,7 +38,10 @@ CorallineAnalysis {
         listenTask = nil;
         listenRate = 4;  // default: 4 pongs per second
         pongCallback = nil;
+        lastOnsetCount = 0;
+        lastOnsetTime = 0;
     }
+
 
     *startAnalyzer {
         if(analyzerRunning) {
@@ -46,6 +54,7 @@ CorallineAnalysis {
             SynthDef(\corallineAnalyzer, {
                 var sig, mono, chain;
                 var amp, freq, hasFreq, centroid, flatness;
+                var onsetTrig, onsetCount;
 
                 // Read main output bus — captures everything: SuperDirt, Tidal, all of it
                 sig = In.ar(0, 2);
@@ -62,34 +71,46 @@ CorallineAnalysis {
                 centroid = SpecCentroid.kr(chain);
                 flatness = SpecFlatness.kr(chain);
 
+                // Onset detection — fires a trigger on transients
+                // threshold 0.5 is moderate sensitivity; lower = more sensitive
+                onsetTrig = Onsets.kr(chain, threshold: 0.5, odftype: \rcomplex);
+                onsetCount = PulseCount.kr(onsetTrig);
+
                 // Write to control buses
                 Out.kr(\ampBus.kr(0), amp);
                 Out.kr(\freqBus.kr(0), freq);
                 Out.kr(\hasFreqBus.kr(0), hasFreq);
                 Out.kr(\centroidBus.kr(0), centroid);
                 Out.kr(\flatnessBus.kr(0), flatness);
+                Out.kr(\onsetCountBus.kr(0), onsetCount);
             }).add;
 
             Server.default.sync;
 
             // Allocate control buses
             analyzerBuses = IdentityDictionary[
-                \amp      -> Bus.control(Server.default, 1),
-                \freq     -> Bus.control(Server.default, 1),
-                \hasFreq  -> Bus.control(Server.default, 1),
-                \centroid -> Bus.control(Server.default, 1),
-                \flatness -> Bus.control(Server.default, 1),
+                \amp        -> Bus.control(Server.default, 1),
+                \freq       -> Bus.control(Server.default, 1),
+                \hasFreq    -> Bus.control(Server.default, 1),
+                \centroid   -> Bus.control(Server.default, 1),
+                \flatness   -> Bus.control(Server.default, 1),
+                \onsetCount -> Bus.control(Server.default, 1),
             ];
 
             // Create analyzer synth at tail of default group
             // (so it reads after everything else has written to bus 0)
             analyzerSynth = Synth(\corallineAnalyzer, [
-                \ampBus,      analyzerBuses[\amp].index,
-                \freqBus,     analyzerBuses[\freq].index,
-                \hasFreqBus,  analyzerBuses[\hasFreq].index,
-                \centroidBus, analyzerBuses[\centroid].index,
-                \flatnessBus, analyzerBuses[\flatness].index,
+                \ampBus,        analyzerBuses[\amp].index,
+                \freqBus,       analyzerBuses[\freq].index,
+                \hasFreqBus,    analyzerBuses[\hasFreq].index,
+                \centroidBus,   analyzerBuses[\centroid].index,
+                \flatnessBus,   analyzerBuses[\flatness].index,
+                \onsetCountBus, analyzerBuses[\onsetCount].index,
             ], target: Server.default.defaultGroup, addAction: \addToTail);
+
+            // Reset onset tracking state
+            lastOnsetCount = 0;
+            lastOnsetTime = Main.elapsedTime;
 
             analyzerRunning = true;
             "CorallineAnalysis: audio analyzer started (listening on bus 0).".postln;
@@ -117,24 +138,38 @@ CorallineAnalysis {
     // .getSynchronous reads from shared memory — fast, no server roundtrip,
     // at most one control period behind.
     *getAnalysis {
+        var currentCount, currentTime, dt, onsetRate;
+
         if(analyzerRunning.not or: { analyzerBuses.isNil }) {
-            ^(\rms: 0, \centroid: 0, \flatness: 0, \freq: 0, \hasFreq: 0)
+            ^(\rms: 0, \centroid: 0, \flatness: 0, \freq: 0, \hasFreq: 0, \onsetRate: 0)
         };
 
+        // Compute onset rate from count delta
+        currentCount = analyzerBuses[\onsetCount].getSynchronous;
+        currentTime = Main.elapsedTime;
+        dt = currentTime - lastOnsetTime;
+        onsetRate = if(dt > 0.01) {
+            (currentCount - lastOnsetCount) / dt
+        } { 0 };
+        lastOnsetCount = currentCount;
+        lastOnsetTime = currentTime;
+
         ^(
-            \rms:      analyzerBuses[\amp].getSynchronous,
-            \centroid: analyzerBuses[\centroid].getSynchronous,
-            \flatness: analyzerBuses[\flatness].getSynchronous,
-            \freq:     analyzerBuses[\freq].getSynchronous,
-            \hasFreq:  analyzerBuses[\hasFreq].getSynchronous
+            \rms:       analyzerBuses[\amp].getSynchronous,
+            \centroid:  analyzerBuses[\centroid].getSynchronous,
+            \flatness:  analyzerBuses[\flatness].getSynchronous,
+            \freq:      analyzerBuses[\freq].getSynchronous,
+            \hasFreq:   analyzerBuses[\hasFreq].getSynchronous,
+            \onsetRate: onsetRate  // onsets per second
         )
     }
 
     // Send a single audio analysis pong via the callback.
-    *sendAudioPong {
+    // reqId is passed through for ping/pong matching (nil for continuous listening).
+    *sendAudioPong { |reqId|
         var a = this.getAnalysis;
         if(pongCallback.notNil) {
-            pongCallback.value(a);
+            pongCallback.value(a, reqId);
         };
     }
 
@@ -169,13 +204,13 @@ CorallineAnalysis {
         };
     }
 
-    *handlePingAudio {
+    *handlePingAudio { |reqId|
         if(analyzerRunning.not) {
             "CorallineAnalysis: analyzer not running — call .startAnalyzer first".warn;
             ^this
         };
 
-        this.sendAudioPong;
+        this.sendAudioPong(reqId);
     }
 
     // Quick check: what does the room sound like right now?
@@ -187,6 +222,7 @@ CorallineAnalysis {
         "  flatness: %  (texture: 0=tone, 1=noise)".format(a[\flatness].round(0.001)).postln;
         "  freq:     % Hz  (pitch)".format(a[\freq].round(1)).postln;
         "  hasFreq:  %  (pitch confidence)".format(a[\hasFreq].round(0.01)).postln;
+        "  onsetRate: %/s  (rhythmic density)".format(a[\onsetRate].round(0.1)).postln;
         ^a
     }
 }

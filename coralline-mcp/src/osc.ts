@@ -48,7 +48,7 @@ export class OscClient {
 export class OscServer {
   private server: Server;
   private stateQueue: PendingPong<StatePong>[] = [];
-  private audioQueue: PendingPong<AudioPong>[] = [];
+  private audioPending: Map<string, PendingPong<AudioPong>> = new Map();
 
   constructor(private readonly logger: Logger) {
     this.server = new Server(LISTEN_PORT, "0.0.0.0", () => {
@@ -59,7 +59,14 @@ export class OscServer {
       this.handleMessage(msg as [string, ...unknown[]]);
     });
 
-    this.server.on("error", (err: Error) => {
+    this.server.on("error", (err: Error & { code?: string }) => {
+      if (err.code === "EADDRINUSE") {
+        console.error(
+          `[osc] FATAL: port ${LISTEN_PORT} already in use. ` +
+          `Kill stale processes: lsof -i UDP:${LISTEN_PORT} -t | xargs kill`
+        );
+        process.exit(1);
+      }
       console.error("[osc] server error:", err.message);
     });
   }
@@ -84,10 +91,16 @@ export class OscServer {
       const pending = this.stateQueue.shift()!;
       clearTimeout(pending.timer);
       pending.resolve(this.parseStatePong(args));
-    } else if (path === "/coralline/pong/audio" && this.audioQueue.length > 0) {
-      const pending = this.audioQueue.shift()!;
-      clearTimeout(pending.timer);
-      pending.resolve(this.parseAudioPong(args));
+    } else if (path === "/coralline/pong/audio") {
+      const kv = this.parseKV(args);
+      const reqId = kv["reqId"] as string | undefined;
+      if (reqId && this.audioPending.has(reqId)) {
+        const pending = this.audioPending.get(reqId)!;
+        this.audioPending.delete(reqId);
+        clearTimeout(pending.timer);
+        pending.resolve(this.parseAudioPong(args));
+      }
+      // Pongs without reqId (e.g. continuous listening) are silently ignored
     }
   }
 
@@ -127,13 +140,12 @@ export class OscServer {
   awaitAudioPong(reqId: string): Promise<AudioPong> {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
-        const idx = this.audioQueue.findIndex((p) => p.timer === timer);
-        if (idx !== -1) this.audioQueue.splice(idx, 1);
+        this.audioPending.delete(reqId);
         reject(new Error(`Timed out waiting for /coralline/pong/audio (${PONG_TIMEOUT_MS}ms). Is SuperCollider running?`));
       }, PONG_TIMEOUT_MS);
 
       const origResolve = resolve;
-      this.audioQueue.push({
+      this.audioPending.set(reqId, {
         resolve: (val) => {
           this.logger.log({
             ts: new Date().toISOString(),
@@ -185,6 +197,7 @@ export class OscServer {
       flatness: Number(kv["flatness"] ?? 0),
       freq: Number(kv["freq"] ?? 0),
       hasFreq: Number(kv["hasFreq"] ?? 0),
+      onsetRate: Number(kv["onsetRate"] ?? 0),
     };
   }
 }
