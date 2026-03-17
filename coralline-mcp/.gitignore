@@ -6,3 +6,6 @@ resources/
 node_modules/
 dist/
 logs/
+
+# runtime
+coralline.pid

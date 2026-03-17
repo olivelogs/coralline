@@ -7,3 +7,4 @@ export const PROJ_ROOT = resolve(DIST_DIR, "..");        // coralline-mcp/
 export const REPO_ROOT = resolve(PROJ_ROOT, "..");        // monorepo root
 export const LOG_DIR = resolve(PROJ_ROOT, "logs");
 export const DATA_DIR = resolve(REPO_ROOT, "quark", "Coralline", "Data");
+export const PID_FILE = resolve(PROJ_ROOT, "coralline.pid");
