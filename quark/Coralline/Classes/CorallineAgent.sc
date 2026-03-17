@@ -172,7 +172,8 @@ CorallineAgent {
         // ==========================================
         oscResponders = oscResponders.add(
             OSCdef(\corallinePingState, { |msg, time, addr, recvPort|
-                this.handlePingState;
+                var reqId = if(msg.size > 1) { msg[1].asString } { nil };
+                this.handlePingState(reqId);
             }, '/coralline/ping/state')
         );
 
@@ -554,13 +555,13 @@ CorallineAgent {
 
     // ---- Ping/Pong handlers ----
 
-    *handlePingState {
+    *handlePingState { |reqId|
         var activeLoops, msg;
 
         activeLoops = loops.keys.asArray;
 
         // Build reply without loop_names when there are no loops.
-        // osc-min appears to choke on an empty OSC string here.
+        // osc-min chokes on empty OSC strings.
         msg = ['/coralline/pong/state',
             "loops", activeLoops.size,
             "running", isRunning.asInteger
@@ -569,6 +570,8 @@ CorallineAgent {
         if(activeLoops.notEmpty) {
             msg = msg ++ ["loop_names", activeLoops.join(",")];
         };
+
+        if(reqId.notNil) { msg = msg ++ ["reqId", reqId] };
 
         replyAddr.sendMsg(*msg);
 
