@@ -111,78 +111,27 @@ export class OscServer {
       req_id: null,
     });
 
-    if (path === "/coralline/pong/state") {
-      console.error(
-        `[osc] state pong received; queue_len=${this.stateQueue.length}; args=${JSON.stringify(args)}`
-      );
-
-      if (this.stateQueue.length === 0) {
-        console.error("[osc] state pong dropped; no pending state request");
-        return;
-      }
-
+    if (path === "/coralline/pong/state" && this.stateQueue.length > 0) {
       const pending = this.stateQueue.shift()!;
-      try {
-        clearTimeout(pending.timer);
-        const parsed = this.parseStatePong(args);
-        console.error(
-          `[osc] resolving state pong; parsed=${JSON.stringify(parsed)}`
-        );
-        pending.resolve(parsed);
-      } catch (err) {
-        console.error(
-          `[osc] state pong resolution failed: ${(err as Error).stack ?? (err as Error).message}`
-        );
-        pending.reject(err as Error);
-      }
+      clearTimeout(pending.timer);
+      pending.resolve(this.parseStatePong(args));
     } else if (path === "/coralline/pong/audio") {
       const kv = this.parseKV(args);
       const reqId = kv["reqId"] as string | undefined;
-
-      console.error(
-        `[osc] audio pong received; reqId=${reqId ?? "missing"}; pending_keys=${JSON.stringify([...this.audioPending.keys()])}; args=${JSON.stringify(args)}`
-      );
-
-      if (!reqId) {
-        console.error("[osc] audio pong ignored; reqId missing");
-        return;
-      }
-
-      if (!this.audioPending.has(reqId)) {
-        console.error(`[osc] audio pong dropped; no pending request for reqId=${reqId}`);
-        return;
-      }
-
-      const pending = this.audioPending.get(reqId)!;
-      this.audioPending.delete(reqId);
-
-      try {
+      if (reqId && this.audioPending.has(reqId)) {
+        const pending = this.audioPending.get(reqId)!;
+        this.audioPending.delete(reqId);
         clearTimeout(pending.timer);
-        const parsed = this.parseAudioPong(args);
-        console.error(
-          `[osc] resolving audio pong; reqId=${reqId}; parsed=${JSON.stringify(parsed)}`
-        );
-        pending.resolve(parsed);
-      } catch (err) {
-        console.error(
-          `[osc] audio pong resolution failed for reqId=${reqId}: ${(err as Error).stack ?? (err as Error).message}`
-        );
-        pending.reject(err as Error);
+        pending.resolve(this.parseAudioPong(args));
       }
     }
   }
 
   awaitStatePong(reqId: string): Promise<StatePong> {
     return new Promise((resolve, reject) => {
-      console.error(
-        `[osc] registering state pong waiter; reqId=${reqId}; queue_len_before=${this.stateQueue.length}`
-      );
       const timer = setTimeout(() => {
         const idx = this.stateQueue.findIndex((p) => p.timer === timer);
         if (idx !== -1) this.stateQueue.splice(idx, 1);
-        console.error(
-          `[osc] state pong timeout; reqId=${reqId}; queue_len_after=${this.stateQueue.length}`
-        );
         reject(
           new Error(
             `Timed out waiting for /coralline/pong/state (${PONG_TIMEOUT_MS}ms). Is SuperCollider running?`
@@ -193,9 +142,6 @@ export class OscServer {
       const origResolve = resolve;
       this.stateQueue.push({
         resolve: (val) => {
-          console.error(
-            `[osc] state pong resolved; reqId=${reqId}; queue_len_now=${this.stateQueue.length}`
-          );
           this.logger.log({
             ts: new Date().toISOString(),
             dir: "in",
@@ -212,22 +158,13 @@ export class OscServer {
         reject,
         timer,
       });
-      console.error(
-        `[osc] state pong waiter registered; reqId=${reqId}; queue_len_after=${this.stateQueue.length}`
-      );
     });
   }
 
   awaitAudioPong(reqId: string): Promise<AudioPong> {
     return new Promise((resolve, reject) => {
-      console.error(
-        `[osc] registering audio pong waiter; reqId=${reqId}; pending_count_before=${this.audioPending.size}`
-      );
       const timer = setTimeout(() => {
         this.audioPending.delete(reqId);
-        console.error(
-          `[osc] audio pong timeout; reqId=${reqId}; pending_count_after=${this.audioPending.size}`
-        );
         reject(
           new Error(
             `Timed out waiting for /coralline/pong/audio (${PONG_TIMEOUT_MS}ms). Is SuperCollider running?`
@@ -238,9 +175,6 @@ export class OscServer {
       const origResolve = resolve;
       this.audioPending.set(reqId, {
         resolve: (val) => {
-          console.error(
-            `[osc] audio pong resolved; reqId=${reqId}; pending_count_now=${this.audioPending.size}`
-          );
           this.logger.log({
             ts: new Date().toISOString(),
             dir: "in",
@@ -257,9 +191,6 @@ export class OscServer {
         reject,
         timer,
       });
-      console.error(
-        `[osc] audio pong waiter registered; reqId=${reqId}; pending_count_after=${this.audioPending.size}`
-      );
     });
   }
 

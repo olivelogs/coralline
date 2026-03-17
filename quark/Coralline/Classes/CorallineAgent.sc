@@ -559,12 +559,18 @@ CorallineAgent {
 
         activeLoops = loops.keys.asArray;
 
-        // Reply with state
-        replyAddr.sendMsg('/coralline/pong/state',
+        // Build reply without loop_names when there are no loops.
+        // osc-min appears to choke on an empty OSC string here.
+        msg = ['/coralline/pong/state',
             "loops", activeLoops.size,
-            "loop_names", activeLoops.join(","),
             "running", isRunning.asInteger
-        );
+        ];
+
+        if(activeLoops.notEmpty) {
+            msg = msg ++ ["loop_names", activeLoops.join(",")];
+        };
+
+        replyAddr.sendMsg(*msg);
 
         "CorallineAgent: pong/state sent → % active loops".format(activeLoops.size).postln;
     }
