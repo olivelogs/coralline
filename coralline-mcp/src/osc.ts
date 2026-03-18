@@ -120,8 +120,9 @@ export class OscClient {
   }
 }
 
-// ---- OSC Server (pong listener via dgram + osc-min) ----
-// Uses exclusive binding to prevent zombie process port conflicts.
+// ---- OSC Server (pong listener via dgram) ----
+// Uses a minimal local OSC decoder for Coralline's pong message shapes
+// and exclusive binding to prevent zombie process port conflicts.
 
 export class OscServer {
   private socket: Socket;
