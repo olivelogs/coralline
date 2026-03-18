@@ -7,7 +7,7 @@
 - Multiple listener processes accumulating on 9601
 
 ### Changed
-- Consolidated logging format
+- inbound decoding of OSC messages in osc.ts for `s`, `i`, `f`, `d` types.
 
 ## [0.1.0] - 2026-03-15
 ### Added

@@ -3,12 +3,16 @@
 
 # folders
 resources/
-AVisualizer/
 .vscode/
-scd/docs/
-archive/
-MCP2OSC/
 Coralline/Data/mapping
 Coralline/Data/probes
+coralline-mcp/node_modules/
+coralline-mcp/dist/
+coralline-mcp/logs/
 
+# runtime
+coralline.pid
+
+# other files
+roadmap.md
 
