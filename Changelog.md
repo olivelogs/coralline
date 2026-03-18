@@ -8,6 +8,7 @@
 
 ### Changed
 - inbound decoding of OSC messages in osc.ts for `s`, `i`, `f`, `d` types.
+- changed from FIFO pong resolver to reqId-based
 
 ## [0.1.0] - 2026-03-15
 ### Added
