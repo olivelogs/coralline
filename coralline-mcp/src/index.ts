@@ -8,7 +8,6 @@ import { PID_FILE } from "./paths.js";
 import { registerAnalysisTools } from "./tools/analysis.js";
 import { registerFxTool } from "./tools/fx.js";
 import { registerLoopTools } from "./tools/loops.js";
-import { registerPhraseTool } from "./tools/phrase.js";
 import { registerPlayTool } from "./tools/play.js";
 import { registerSynthTools } from "./tools/synths.js";
 
@@ -84,7 +83,6 @@ const server = new McpServer({
 
 registerPlayTool(server, oscClient);
 registerLoopTools(server, oscClient);
-registerPhraseTool(server, oscClient);
 registerAnalysisTools(server, oscClient, oscServer);
 registerSynthTools(server);
 registerFxTool(server);
