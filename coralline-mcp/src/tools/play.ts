@@ -9,7 +9,7 @@ const NOTES_DESC =
 
 const RAW_DESC =
   "Raw SuperDirt params passed directly after the | separator, bypassing semantic resolution. " +
-  "Each value can be a number (blanket) or [start, end] (gradient across the phrase). " +
+  "Format: space-separated key/value pairs, e.g. \"gain 1 room 0.5\". " +
   "Semantic params are resolved by the quark — don't also send the raw params they control unless you intend to override.";
 
 // NOTE: Claude's tool system silently drops tools whose JSON Schema contains
@@ -17,7 +17,23 @@ const RAW_DESC =
 // as plain types — no unions.
 //
 // Gradient pattern: set brightness=0.3 for blanket, or brightness=0.3 +
-// end={brightness: 0.9} for a gradient from 0.3→0.9 across the phrase.
+// brightness_end=0.9 for a gradient from 0.3→0.9 across the phrase.
+
+function parseRawPairs(raw: string | undefined): [string, number][] {
+  if (!raw?.trim()) return [];
+
+  const tokens = raw.trim().split(/\s+/);
+  const pairs: [string, number][] = [];
+
+  for (let i = 0; i + 1 < tokens.length; i += 2) {
+    const key = tokens[i]!;
+    const value = Number(tokens[i + 1]);
+    if (!Number.isFinite(value)) continue;
+    pairs.push([key, value]);
+  }
+
+  return pairs;
+}
 
 const playSchema = z.object({
   synth: z.string().describe("SuperDirt synth name, e.g. supervibe, supersaw, soskick"),
@@ -37,60 +53,56 @@ const playSchema = z.object({
   space: z.number().min(0).max(1).optional().describe("Stereo width / detuning spread."),
   weight: z.number().min(0).max(1).optional().describe("Low-frequency body / heaviness."),
   attack: z.number().min(0).max(1).optional().describe("Onset sharpness (0=soft, 1=percussive)."),
-  end: z
-    .record(z.string(), z.number())
-    .optional()
-    .describe(
-      "Gradient end values for semantic dims. Keys must match a semantic param above. " +
-      "E.g. {brightness: 0.9} with brightness=0.3 creates a gradient 0.3→0.9 across the phrase."
-    ),
-  raw: z
-    .record(z.string(), z.number())
-    .optional()
-    .describe(RAW_DESC),
+  brightness_end: z.number().min(0).max(1).optional().describe("Optional gradient end value for brightness."),
+  warmth_end: z.number().min(0).max(1).optional().describe("Optional gradient end value for warmth."),
+  texture_end: z.number().min(0).max(1).optional().describe("Optional gradient end value for texture."),
+  movement_end: z.number().min(0).max(1).optional().describe("Optional gradient end value for movement."),
+  space_end: z.number().min(0).max(1).optional().describe("Optional gradient end value for space."),
+  weight_end: z.number().min(0).max(1).optional().describe("Optional gradient end value for weight."),
+  attack_end: z.number().min(0).max(1).optional().describe("Optional gradient end value for attack."),
+  raw: z.string().optional().describe(RAW_DESC),
   raw_end: z
-    .record(z.string(), z.number())
+    .string()
     .optional()
     .describe(
-      "Gradient end values for raw params. Keys must match a key in raw. " +
-      "E.g. raw={gain: 1.0}, raw_end={gain: 0.5} fades gain across the phrase."
+      "Optional gradient end values for raw params, using the same key/value format as raw. " +
+      "Example: raw=\"gain 1 room 0.2\", raw_end=\"gain 0.5 room 0.8\"."
     ),
 });
 
 export function registerPlayTool(server: McpServer, osc: OscClient): void {
   server.tool(
-    "play_sound",
-    "Play notes with semantic timbral parameters. " +
-      "A single note (default) or a phrase of multiple notes. " +
-      "Semantic params (brightness, warmth, etc.) are resolved by the Coralline quark into synth-specific values. " +
-      "For phrases, params can be a single value (all notes) or [start, end] for a gradient across the phrase. " +
-      "Use raw for effects (room, delay, krush) or direct param overrides.",
+    "play",
+    "Play one note or a short phrase on a SuperDirt synth. " +
+      "Use semantic timbral controls like brightness, warmth, texture, movement, space, weight, and attack. " +
+      "Set *_end fields to create gradients across a phrase, and use raw/raw_end for direct SuperDirt params or effects.",
     playSchema.shape,
     async (input) => {
       const notes = input.notes || "0";
       const dur = input.dur ?? 0.5;
       const args: (string | number)[] = [input.synth, notes, dur];
-      const endVals = (input.end as Record<string, number> | undefined) ?? {};
-      const rawEndVals = (input.raw_end as Record<string, number> | undefined) ?? {};
+      const rawPairs = parseRawPairs(input.raw);
+      const rawEndVals = Object.fromEntries(parseRawPairs(input.raw_end));
 
       // Append semantic params (with optional gradient end values)
       for (const dim of SEMANTIC_DIMENSIONS) {
         const val = (input as Record<string, unknown>)[dim];
+        const endVal = (input as Record<string, unknown>)[`${dim}_end`];
         if (typeof val === "number") {
           args.push(dim, val);
-          if (dim in endVals) {
-            args.push(endVals[dim]!);
+          if (typeof endVal === "number") {
+            args.push(endVal);
           }
         }
       }
 
       // Append raw params after pipe separator (with optional gradient end values)
-      if (input.raw && Object.keys(input.raw).length > 0) {
+      if (rawPairs.length > 0) {
         args.push("|");
-        for (const [k, v] of Object.entries(input.raw)) {
+        for (const [k, v] of rawPairs) {
           args.push(k, v);
           if (k in rawEndVals) {
-            args.push(rawEndVals[k]!);
+            args.push(rawEndVals[k] as number);
           }
         }
       }

@@ -1,8 +1,17 @@
 # Changelog
 
+## [0.1.2] - 2026-03-
+### Fixed
+- Tool visibility on Claude Desktop: flattened `play` input schema
+- `play` is now findable via Claude's tool search
+
+### Changed
+- Combined `play` and `phrase` into one `play` tool
+- Tightened the `play` tool description for better discoverability
+
 ## [0.1.1] - 2026-03-17
 ### Fixed
-- OSC pong decoding for audio analysis
+- OSC pong decoding for audio analysis & state retrieval
 - Port cleanup on MCP shutdown
 - Multiple listener processes accumulating on 9601
 
