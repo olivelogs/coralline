@@ -1,4 +1,4 @@
-# coralline (v0.1.0)
+# coralline
 
 Coralline gives Claude the ability to make music in real-time with SuperCollider, effectively translating dialogue into music. Coralline consists of two things: the Coralline MCP and a SuperCollider quark. **Both** are required for use. 
 
@@ -10,11 +10,14 @@ The quark enables AI agents to interact with SuperDirt synths. There are three c
 - **CorallineAnalysis** defines audio analysis behavior, which an agent can request to "hear" the music.  
 - **CorallineSemantics** resolves the base SuperDirt Synthdefs to be agent-friendly - that is, Synthdefs are routed through it, and params are resolved into semantic dimensions. It requires superdirt to run.  
 
+Coralline has only been tested and is known to work on macOS.
+
 ---
 
 ## Dependencies:
 - [SuperCollider IDE](https://supercollider.github.io/)
 - [SuperDirt](https://codeberg.org/musikinformatik/SuperDirt) - note that it is much easier to just download the entire TidalCycles package to get SuperDirt working correctly
+- Claude Desktop or Claude Code (not compatible with claude.ai)
 
 ### Optional (but highly recommended for full functionality):
 - [TidalCycles](https://tidalcycles.org/)  
@@ -168,6 +171,7 @@ CorallineAnalysis: audio analyzer started (listening on bus 0).
 - SuperCollider handles raw audio, which doesn't always get along with bluetooth headphones. If you're running into trouble here, I recommend using your built-in speakers (check audio MIDI settings in Mac) and building from there.
 #### If pong is not working
 - MacOS allows multiple UDP sockets to run on a port. Run `lsof -i UDP:9601` in terminal to clear processes.
+- You cannot run the MCP server on Claude Desktop 
 
 ### Using SuperCollider
 I strongly recommend orienting yourself in the SuperCollider IDE if you have not used it before. Read through a few pages of the docs (which are displayed in the IDE) and learn how to run code inside the SCIDE. You don't need to know sclang to use these tools - but SuperCollider is the backbone of the tooling, so you'll be in there often!
@@ -184,7 +188,7 @@ Building this would not have been possible without these amazing tools:
 
 ## What the quark does
 
-Coralline seeks to capture musical intent by translating raw params into semantic definitions. When you say "make the sound brighter," Claude can adjust *brightness* rather than finding the right param to adjust, as each synth reacts differently to different params. We mapped param effects to semantic meaning, using curves derived from audio analysis. Seven dimensions of sound:
+Coralline seeks to capture musical intent by translating raw params into semantic definitions and providing audio analysis feedback. When you say "make the sound brighter," Claude can adjust *brightness* rather than finding the right param to adjust, as each synth reacts differently to different params. We mapped param effects to semantic meaning, using curves derived from audio analysis. CorallineSemantics captures seven dimensions of sound:
 
 | dimension   | description                                  |
 |-------------|----------------------------------------------|
@@ -198,8 +202,18 @@ Coralline seeks to capture musical intent by translating raw params into semanti
 
 Claude uses these instead of raw params to create more expressive sound through conversation. Raw params can still be passed with a pipe `|` separator. These override semantics. 
 
+CorallineAnalysis reports on five audio features:
+
+| feature      | description                                                 |
+|--------------|-------------------------------------------------------------|
+| rms          | loundness                                                   |
+| centroid     | spectral brightness in Hz (verified against semantic layer) |
+| flatness     | tonal vs noisy                                              |
+| freq/hasFreq | pitch detection                                             |
+| onset_rate   | rhythmic density, accurate to the note                      |
+
 ---
 ## Videos
 ### [Quark installation](https://youtu.be/CQlz42iuSgc)
 
-### [Demo](https://youtu.be/fW2XM1ZERIo)
+### [Demo] coming soom

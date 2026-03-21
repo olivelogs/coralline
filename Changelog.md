@@ -1,9 +1,9 @@
 # Changelog
 
-## [0.1.2] - 2026-03-
+## [0.1.2] - 2026-03-20
 ### Fixed
 - Tool visibility on Claude Desktop: flattened `play` input schema
-- `play` is now findable via Claude's tool search
+- Audio analysis for onset_rate returning 0. Separate FFT chain for Onsets (no sharing with centroid/flatness), `\power` instead of `\rcomplex` (energy detection, not spectral novelty), and threshold 0.1 (sensitive enough for both kicks and pad note-ons).
 
 ### Changed
 - Combined `play` and `phrase` into one `play` tool

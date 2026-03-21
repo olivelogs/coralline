@@ -52,7 +52,7 @@ CorallineAnalysis {
         fork {
             // Define the analyzer SynthDef
             SynthDef(\corallineAnalyzer, {
-                var sig, mono, chain;
+                var sig, mono, chain, onsetChain;
                 var amp, freq, hasFreq, centroid, flatness;
                 var onsetTrig, onsetCount;
 
@@ -71,9 +71,12 @@ CorallineAnalysis {
                 centroid = SpecCentroid.kr(chain);
                 flatness = SpecFlatness.kr(chain);
 
-                // Onset detection — fires a trigger on transients
-                // threshold 0.5 is moderate sensitivity; lower = more sensitive
-                onsetTrig = Onsets.kr(chain, threshold: 0.5, odftype: \rcomplex);
+                // Onset detection — needs its own FFT chain
+                // Sharing with SpecCentroid/SpecFlatness interferes with Onsets' internal state
+                onsetChain = FFT(LocalBuf(1024), mono);
+                // \power detects energy increase (good for kicks/percussive hits)
+                // threshold 0.1 is quite sensitive; raise if getting false triggers on pads
+                onsetTrig = Onsets.kr(onsetChain, threshold: 0.1, odftype: \power);
                 onsetCount = PulseCount.kr(onsetTrig);
 
                 // Write to control buses
