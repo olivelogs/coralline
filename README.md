@@ -25,10 +25,6 @@ This allows you to build on what Claude writes as loops.
 
 *These dependencies are independently licensed and have their own installation instructions.*
 
-### what's missing in v0.1
-- sample reference list
-- superfm synth - it's a beast
-
 ---
 
 ## Installation
@@ -171,7 +167,6 @@ CorallineAnalysis: audio analyzer started (listening on bus 0).
 - SuperCollider handles raw audio, which doesn't always get along with bluetooth headphones. If you're running into trouble here, I recommend using your built-in speakers (check audio MIDI settings in Mac) and building from there.
 #### If pong is not working
 - MacOS allows multiple UDP sockets to run on a port. Run `lsof -i UDP:9601` in terminal to clear processes.
-- You cannot run the MCP server on Claude Desktop 
 
 ### Using SuperCollider
 I strongly recommend orienting yourself in the SuperCollider IDE if you have not used it before. Read through a few pages of the docs (which are displayed in the IDE) and learn how to run code inside the SCIDE. You don't need to know sclang to use these tools - but SuperCollider is the backbone of the tooling, so you'll be in there often!
