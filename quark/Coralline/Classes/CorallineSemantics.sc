@@ -37,8 +37,6 @@
 
 CorallineSemantics {
 
-	var classDir, refinedPath;
-
     // Class variable: Dictionary of synth -> semantic mappings
     // Structure: synthName -> dimension -> Array of curve specs
     classvar <mappings;
