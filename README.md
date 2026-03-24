@@ -97,7 +97,7 @@ The post window should show:
 Installing Coralline
 Adding path: /Users/olivelo/coralline/quark/Coralline
 Coralline installed
--> Quark: Coralline[0.1.1]
+-> Quark: Coralline[0.1.2]
 -> a Main
 ```
   
@@ -216,4 +216,4 @@ CorallineAnalysis reports on five audio features:
 ## Videos
 ### [Quark installation](https://youtu.be/CQlz42iuSgc)
 
-### [Demo] coming soom
+### [Demo] coming soon

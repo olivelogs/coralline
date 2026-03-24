@@ -407,7 +407,6 @@ CorallineAgent {
         // msg: ['/coralline/phrase', synthName, notePattern, durPerNote, ...params...]
         var synthName, noteStr, durPerNote, notes, numNotes;
         var semGradients, rawGradients, pipeIdx;
-        var paramRange;
 
         if(msg.size < 4) {
             "CorallineAgent: /coralline/phrase needs synthName, notePattern, durPerNote".warn;
