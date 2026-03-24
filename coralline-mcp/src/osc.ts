@@ -128,6 +128,12 @@ export class OscServer {
   private socket: Socket;
   private statePending: Map<string, PendingPong<StatePong>> = new Map();
   private audioPending: Map<string, PendingPong<AudioPong>> = new Map();
+  private _available = true;
+
+  /** Whether the pong listener is active (false if port was already in use) */
+  get available(): boolean {
+    return this._available;
+  }
 
   constructor(private readonly logger: Logger) {
     this.socket = createSocket({ type: "udp4", reuseAddr: false });
@@ -145,11 +151,13 @@ export class OscServer {
 
     this.socket.on("error", (err: Error & { code?: string }) => {
       if (err.code === "EADDRINUSE") {
+        this._available = false;
         console.error(
-          `[osc] FATAL: port ${LISTEN_PORT} already in use. ` +
-            `Kill stale processes: lsof -i UDP:${LISTEN_PORT} -t | xargs kill`
+          `[osc] port ${LISTEN_PORT} in use by another coralline-mcp instance. ` +
+            `play/loop/synth/fx tools will work, but get_state and get_audio ` +
+            `require the other instance.`
         );
-        process.exit(1);
+        return;
       }
       console.error("[osc] server error:", err.message);
     });
@@ -201,6 +209,15 @@ export class OscServer {
   }
 
   awaitStatePong(reqId: string): Promise<StatePong> {
+    if (!this._available) {
+      return Promise.reject(
+        new Error(
+          "Port 9601 is held by another coralline-mcp instance (likely Claude Desktop). " +
+            "Use get_state from that client, or close it to free the port."
+        )
+      );
+    }
+
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         this.statePending.delete(reqId);
@@ -234,6 +251,15 @@ export class OscServer {
   }
 
   awaitAudioPong(reqId: string): Promise<AudioPong> {
+    if (!this._available) {
+      return Promise.reject(
+        new Error(
+          "Port 9601 is held by another coralline-mcp instance (likely Claude Desktop). " +
+            "Use get_audio from that client, or close it to free the port."
+        )
+      );
+    }
+
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         this.audioPending.delete(reqId);

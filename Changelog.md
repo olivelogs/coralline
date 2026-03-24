@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.1.3] - 2026-03-24
+### Fixed
+- Graceful port sharing: second MCP instance no longer kills the first. Claude Desktop stays connected when Claude Code starts. Play/loop/synth/fx tools work from both clients; get_state and get_audio surface a clear "port in use" message on the second instance.
+
 ## [0.1.2] - 2026-03-20
 ### Fixed
 - Tool visibility on Claude Desktop: flattened `play` input schema

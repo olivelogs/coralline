@@ -11,9 +11,11 @@ import { registerLoopTools } from "./tools/loops.js";
 import { registerPlayTool } from "./tools/play.js";
 import { registerSynthTools } from "./tools/synths.js";
 
-// ---- Pidfile: ensure only one MCP instance owns port 9601 ----
+// ---- Pidfile: clean up stale pidfiles from dead processes ----
+// If another coralline-mcp is alive (e.g. Claude Desktop), leave it alone.
+// The new instance will degrade gracefully without the pong listener.
 
-function killStalePid(): void {
+function cleanStalePidfile(): void {
   if (!existsSync(PID_FILE)) return;
 
   try {
@@ -23,26 +25,17 @@ function killStalePid(): void {
       return;
     }
 
-    // Check if the process is still alive
     try {
       process.kill(oldPid, 0); // signal 0 = existence check, doesn't kill
-      // Still alive — kill it
-      console.error(`[pid] killing stale coralline-mcp (pid ${oldPid})`);
-      process.kill(oldPid, "SIGTERM");
-      // Give it a moment to die
-      const deadline = Date.now() + 1000;
-      while (Date.now() < deadline) {
-        try {
-          process.kill(oldPid, 0);
-        } catch {
-          break; // it's gone
-        }
-      }
+      // Still alive — leave it alone
+      console.error(
+        `[pid] another coralline-mcp is running (pid ${oldPid}), keeping it alive`
+      );
     } catch {
-      // Process already dead, just clean up the pidfile
+      // Process is dead, clean up the stale pidfile
+      console.error(`[pid] cleaning stale pidfile (pid ${oldPid} is gone)`);
+      unlinkSync(PID_FILE);
     }
-
-    unlinkSync(PID_FILE);
   } catch {
     // Pidfile unreadable or already gone, move on
   }
@@ -64,8 +57,8 @@ function removePid(): void {
   }
 }
 
-// Kill any stale instance before we try to bind the port
-killStalePid();
+// Clean up pidfile if the old process is dead (don't kill live instances)
+cleanStalePidfile();
 writePid();
 
 // ---- Boot ----
@@ -78,7 +71,7 @@ const oscClient = new OscClient(logger);
 
 const server = new McpServer({
   name: "coralline",
-  version: "0.1.2",
+  version: "0.1.3",
 });
 
 registerPlayTool(server, oscClient);
