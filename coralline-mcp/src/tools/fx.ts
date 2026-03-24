@@ -27,7 +27,7 @@ export function registerFxTool(server: McpServer): void {
   server.tool(
     "get_fx",
     "List available SuperDirt effects by category (filters, space, dynamics, distortion, spectral, etc.). " +
-      "These are passed as raw params after the | separator in play, loop_start, and phrase. " +
+      "These are passed as raw params after the | separator in play and loop_start. " +
       "Optionally filter by category name.",
     {
       category: z
