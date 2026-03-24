@@ -71,7 +71,7 @@ const oscClient = new OscClient(logger);
 
 const server = new McpServer({
   name: "coralline",
-  version: "0.1.2",
+  version: "0.1.3",
 });
 
 registerPlayTool(server, oscClient);
