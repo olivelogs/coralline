@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.4] - 2026-03-28
+### Added
+- Added SuperDirt synth superfm to mappings: `CorallineSemantics.sc` now has a synth alias for four superfm presets (1 through 4). These resolve semantics against their own mappings, then send `superfm` + `voice: N` to SuperDirt.
+- Merged pipeline data + hand-mapped LFO curves. 29 playable synths, superfm_v1-v4 included. lfodepth capped at 0.3 in the semantic layer with a documented safe_max and note for future instances.
+
 ## [0.1.3] - 2026-03-24
 ### Fixed
 - Graceful port sharing: second MCP instance no longer kills the first. Claude Desktop stays connected when Claude Code starts. Play/loop/synth/fx tools work from both clients; get_state and get_audio surface a clear "port in use" message on the second instance.

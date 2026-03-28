@@ -6,8 +6,8 @@ Coralline is a system for AI agents to compose and perform music through SuperCo
 
 One supercollider quark with three classes:
 
-- **CorallineSemantics** (`quark/Coralline/Classes/CorallineSemantics.sc`) — Semantic parameter mapping engine. Maps 7 perceptual dimensions (brightness, warmth, texture, movement, space, weight, attack) normalized 0-1 to synth-specific params with weighted curves. Currently has empirically validated mappings for supervibe, supersaw, superpiano.
-- **CorallineAgent** (`quark/Coralline/Classes/CorallineAgent.sc`) — Bidirectional OSC layer. Handles `/coralline/play` (semantic), `/coralline/raw` (bypass), `/coralline/loop/*` (JITLib/Pdef patterns), and `/coralline/ping/*` (state queries). Supports `|` pipe separator to mix semantic + raw params.
+- **CorallineSemantics** (`quark/Coralline/Classes/CorallineSemantics.sc`) — Semantic parameter mapping engine. Maps 7 perceptual dimensions (brightness, warmth, texture, movement, space, weight, attack) normalized 0-1 to synth-specific params with weighted curves. Currently has empirically validated mappings for 27 synths.
+- **CorallineAgent** (`quark/Coralline/Classes/CorallineAgent.sc`) — Bidirectional OSC layer. Handles `/coralline/phrase` (semantic), `/coralline/raw` (bypass), `/coralline/loop/*` (JITLib/Pdef patterns), and `/coralline/ping/*` (state queries). Supports `|` pipe separator to mix semantic + raw params.
 - **CorallineAnalysis** (`quark/Coralline/Classes/CorallineAnalysis.sc`) — Real-time audio analysis. FFT-based analyzer providing rms, spectral centroid, flatness, pitch, pitch confidence, and onset rate. Uses a callback pattern to decouple from OSC transport.
 
 **coralline-mcp** (`coralline-mcp/`) — TypeScript MCP server bridging Claude to SuperCollider via OSC. Reads synth mappings and effects data from `quark/Coralline/Data/`. The old generic MCP2OSC bridge is archived in `resources/MCP2OSC/`.
@@ -43,10 +43,11 @@ Reference: `resources/scd/docs/effects-reference.md`
 ## Project Conventions
 
 - This is Olive's project. Ask before making architectural decisions.
-- Keep things simple — don't over-engineer. This is a creative tool, not enterprise software.
+- This is a creative tool, not enterprise software
 - SuperCollider code lives in `quark/`.
-- The project is in active development and pivots happen. Read `changelog.md` and `directions.md` in addition to `README.md`, these stay updated.
+- The project is in active development and pivots happen. Read `Changelog.md` and `roadmap.md` in addition to `README.md`, these stay updated.
 - Files in `resources/` are from earlier iterations and not currently active.
+- versioning: use `npm version` to update versioning for node. quark versions need to be updated manually, and examples in README need to be updated to match. 
 
 ## What Not To Do
 

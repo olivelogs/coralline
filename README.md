@@ -62,7 +62,7 @@ To Claude's config (in Claude Desktop settings -> Developer -> Edit Config), add
 
 Restart Claude Desktop. You should see the "coralline" in the list of local MCP servers in the Developer tab.  
 
-v0.1.2 exposes eight tools to Claude:  
+v0.1.4 exposes eight tools to Claude:  
 
 | tool              | function                                                  |
 |-------------------|-----------------------------------------------------------|
@@ -75,7 +75,7 @@ v0.1.2 exposes eight tools to Claude:
 | `get_synth_info`  | show Claude available params for synths                   |
 | `get_fx`          | show Claude available effects                             |
 
-**known bug: `play` may fall into a deferred tools list. if Claude does not see it, Claude should call tool search explicitly**  
+**known bug: `play` may fall into a deferred tools list in Claude Desktop. if Claude does not see it, Claude should call tool search explicitly**  
   
 **However, these won't be usable without the Quarks!**
 
@@ -84,16 +84,16 @@ v0.1.2 exposes eight tools to Claude:
 
 In the SuperCollider IDE, before starting the SuperDirt server, add the coralline quarks directory to SC's search path and tell SuperCollider to manage it:
 ```supercollider
-Quarks.install("file:///Users/.../coralline/quark/Coralline");
+Quarks.install("/Users/.../coralline/quark/Coralline");
 thisProcess.recompile;
 ```
 
 The post window should show:
 ```txt
 Installing Coralline
-Adding path: /Users/olivelo/coralline/quark/Coralline
+Adding path: /Users/.../coralline/quark/Coralline
 Coralline installed
--> Quark: Coralline[0.1.2]
+-> Quark: Coralline[0.1.4]
 -> a Main
 ```
   
@@ -113,13 +113,15 @@ CorallineSemantics.summary;        // see what loaded, writes to post window
 CorallineAgent.start;              // start coralline
 ```
 
+>Note: you can also add these commands to your SuperDirt startup file! 
+
 After running `CorallineSemantics.loadRefined;` you should see this in the post window:
 ```txt
-CorallineSemantics: loaded 25 synths, 305 timbral curves from 'refined_mappings.json'
+CorallineSemantics: loaded 29 synths, 323 timbral curves from 'refined_mappings.json'
 
 === CorallineSemantics Summary ===
   refined loaded: true
-  synths: 25
+  synths: 29
     soshats — 6 dimensions, 6 curves
     soskick — 6 dimensions, 9 curves
     sossnare — 6 dimensions, 17 curves
@@ -127,6 +129,10 @@ CorallineSemantics: loaded 25 synths, 305 timbral curves from 'refined_mappings.
     superchip — 3 dimensions, 3 curves
     superclap — 6 dimensions, 15 curves
     supercomparator — 6 dimensions, 14 curves
+    superfm_v1 — 3 dimensions, 4 curves
+    superfm_v2 — 1 dimensions, 2 curves
+    superfm_v3 — 5 dimensions, 7 curves
+    superfm_v4 — 3 dimensions, 5 curves
     supergong — 5 dimensions, 5 curves
     supergrind — 7 dimensions, 16 curves
     superhammond — 6 dimensions, 16 curves
@@ -145,8 +151,8 @@ CorallineSemantics: loaded 25 synths, 305 timbral curves from 'refined_mappings.
     supertron — 6 dimensions, 11 curves
     supervibe — 6 dimensions, 20 curves
     superzow — 6 dimensions, 15 curves
-  total curves: 305
-  synths with pitch controls: [soshats, soskick, sossnare, sostoms, superchip, supercomparator, supergong, superhammond, superhoover, supernoise, superprimes, superpwm, supersaw, supersquare, superwavemechanics]
+  total curves: 323
+  synths with pitch controls: [soshats, soskick, sossnare, sostoms, superchip, supercomparator, superfm_blend, superfm_v1, superfm_v2, superfm_v3, superfm_v4, supergong, superhammond, superhoover, supernoise, superprimes, superpwm, supersaw, supersquare, superwavemechanics]
 ```
 
 After running `CorallineAgent.start;` you should see this in the post window:
@@ -166,13 +172,14 @@ CorallineAnalysis: audio analyzer started (listening on bus 0).
 - If that does not work, check that SuperDirt and CorallineAgent are running on the correct port (`57120`). I am working on adjusting the MCP to make ports configurable in case this happens.
 - SuperCollider handles raw audio, which doesn't always get along with bluetooth headphones. If you're running into trouble here, I recommend using your built-in speakers (check audio MIDI settings in Mac) and building from there.
 #### If pong is not working
-- MacOS allows multiple UDP sockets to run on a port. Run `lsof -i UDP:9601` in terminal to clear processes.
+- MacOS allows multiple UDP sockets to run on a port. Run `lsof -li UDP:9601` in terminal to show running processes. Run `lsof -ti :9601 | xargs kill` to kill *all* processes on port 9601. 
 
 ### Using SuperCollider
 I strongly recommend orienting yourself in the SuperCollider IDE if you have not used it before. Read through a few pages of the docs (which are displayed in the IDE) and learn how to run code inside the SCIDE. You don't need to know sclang to use these tools - but SuperCollider is the backbone of the tooling, so you'll be in there often!
 
 ### Stopping loops:
-To stop a loop, run Cmd + . (Mac) in SCIDE
+To stop a loop, run Cmd + . (Mac) in SCIDE, or ask Claude to use `stop_loop` tool.
+**Known bug: manually stopping a loop silently inhibits all playback and requires a server reboot to resolve, I'm investigating a fix for this. This does not occur if Claude stops loops with the tool.**
 
 ### Acknowledgements
 Building this would not have been possible without these amazing tools:

@@ -772,6 +772,250 @@
     ],
     "needs_review": []
   },
+  "superfm_blend": {
+    "brightness": [],
+    "warmth": [],
+    "texture": [],
+    "movement": [],
+    "space": [],
+    "weight": [],
+    "attack": [],
+    "pitch_controls": [
+      {
+        "param": "voice",
+        "drift_semitones": 24.8
+      }
+    ],
+    "needs_review": []
+  },
+  "superfm_v1": {
+    "brightness": [],
+    "warmth": [
+      {
+        "param": "feedback",
+        "outLo": 1.5,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.97
+      }
+    ],
+    "texture": [],
+    "movement": [
+      {
+        "param": "lfofreq",
+        "outLo": 0.5,
+        "outHi": 12,
+        "curve": "exp",
+        "weight": 0.571,
+        "confidence": 0.9
+      },
+      {
+        "param": "lfodepth",
+        "outLo": 0,
+        "outHi": 0.3,
+        "curve": "lin",
+        "weight": 0.429,
+        "confidence": 0.85
+      }
+    ],
+    "space": [],
+    "weight": [
+      {
+        "param": "feedback",
+        "outLo": 0,
+        "outHi": 1.5,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.97
+      }
+    ],
+    "attack": [],
+    "pitch_controls": [
+      {
+        "param": "lfodepth",
+        "drift_semitones": 5.0,
+        "safe_max": 0.3,
+        "note": "Semantic layer caps at 0.3 (~1.5st wobble). Above 0.3 causes ~5st pitch drift \u2014 use raw for intentional instability."
+      }
+    ],
+    "needs_review": []
+  },
+  "superfm_v2": {
+    "brightness": [],
+    "warmth": [],
+    "texture": [],
+    "movement": [
+      {
+        "param": "lfofreq",
+        "outLo": 0.5,
+        "outHi": 12,
+        "curve": "exp",
+        "weight": 0.571,
+        "confidence": 0.9
+      },
+      {
+        "param": "lfodepth",
+        "outLo": 0,
+        "outHi": 0.3,
+        "curve": "lin",
+        "weight": 0.429,
+        "confidence": 0.85
+      }
+    ],
+    "space": [],
+    "weight": [],
+    "attack": [],
+    "pitch_controls": [
+      {
+        "param": "lfodepth",
+        "drift_semitones": 5.0,
+        "safe_max": 0.3,
+        "note": "Semantic layer caps at 0.3 (~1.5st wobble). Above 0.3 causes ~5st pitch drift \u2014 use raw for intentional instability."
+      }
+    ],
+    "needs_review": []
+  },
+  "superfm_v3": {
+    "brightness": [
+      {
+        "param": "feedback",
+        "outLo": 0,
+        "outHi": 1.5,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.98
+      }
+    ],
+    "warmth": [
+      {
+        "param": "feedback",
+        "outLo": 1.5,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.85
+      }
+    ],
+    "texture": [],
+    "movement": [
+      {
+        "param": "feedback",
+        "outLo": 0,
+        "outHi": 1.5,
+        "curve": "lin",
+        "weight": 0.3,
+        "confidence": 0.84
+      },
+      {
+        "param": "lfofreq",
+        "outLo": 0.5,
+        "outHi": 12,
+        "curve": "exp",
+        "weight": 0.4,
+        "confidence": 0.9
+      },
+      {
+        "param": "lfodepth",
+        "outLo": 0,
+        "outHi": 0.3,
+        "curve": "lin",
+        "weight": 0.3,
+        "confidence": 0.85
+      }
+    ],
+    "space": [],
+    "weight": [
+      {
+        "param": "feedback",
+        "outLo": 0,
+        "outHi": 1.5,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.85
+      }
+    ],
+    "attack": [
+      {
+        "param": "feedback",
+        "outLo": 0,
+        "outHi": 1.5,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.47
+      }
+    ],
+    "pitch_controls": [
+      {
+        "param": "lfodepth",
+        "drift_semitones": 5.0,
+        "safe_max": 0.3,
+        "note": "Semantic layer caps at 0.3 (~1.5st wobble). Above 0.3 causes ~5st pitch drift \u2014 use raw for intentional instability."
+      }
+    ],
+    "needs_review": []
+  },
+  "superfm_v4": {
+    "brightness": [
+      {
+        "param": "feedback",
+        "outLo": 0,
+        "outHi": 1.5,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.71
+      }
+    ],
+    "warmth": [],
+    "texture": [],
+    "movement": [
+      {
+        "param": "feedback",
+        "outLo": 0,
+        "outHi": 1.5,
+        "curve": "lin",
+        "weight": 0.3,
+        "confidence": 0.8
+      },
+      {
+        "param": "lfofreq",
+        "outLo": 0.5,
+        "outHi": 12,
+        "curve": "exp",
+        "weight": 0.4,
+        "confidence": 0.9
+      },
+      {
+        "param": "lfodepth",
+        "outLo": 0,
+        "outHi": 0.3,
+        "curve": "lin",
+        "weight": 0.3,
+        "confidence": 0.85
+      }
+    ],
+    "space": [],
+    "weight": [],
+    "attack": [
+      {
+        "param": "feedback",
+        "outLo": 1.5,
+        "outHi": 0,
+        "curve": "lin",
+        "weight": 1.0,
+        "confidence": 0.66
+      }
+    ],
+    "pitch_controls": [
+      {
+        "param": "lfodepth",
+        "drift_semitones": 5.0,
+        "safe_max": 0.3,
+        "note": "Semantic layer caps at 0.3 (~1.5st wobble). Above 0.3 causes ~5st pitch drift \u2014 use raw for intentional instability."
+      }
+    ],
+    "needs_review": []
+  },
   "supergong": {
     "brightness": [
       {

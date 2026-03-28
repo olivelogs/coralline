@@ -41,10 +41,38 @@ CorallineAgent {
     classvar <loops;            // Dictionary of active Pdef loops
     classvar <isRunning;
 
+    // Synth aliases: maps virtual synth names to [realSynthName, extraParams]
+    // e.g. superfm_v3 → superfm with voice:3 injected into raw params.
+    // Semantic resolution uses the alias name (so superfm_v3 gets its own mappings),
+    // but SuperDirt receives the real synth name + injected params.
+    classvar <synthAliases;
+
     *initClass {
         oscResponders = [];
         loops = IdentityDictionary.new;
         isRunning = false;
+
+        // Register synth aliases
+        synthAliases = IdentityDictionary[
+            \superfm_v1 -> (\realSynth: \superfm, \inject: (\voice: 1)),
+            \superfm_v2 -> (\realSynth: \superfm, \inject: (\voice: 2)),
+            \superfm_v3 -> (\realSynth: \superfm, \inject: (\voice: 3)),
+            \superfm_v4 -> (\realSynth: \superfm, \inject: (\voice: 4)),
+        ];
+    }
+
+    // Resolve a synth alias. Returns an Event:
+    //   \semanticName — name for CorallineSemantics lookup (the alias)
+    //   \dirtName     — name for SuperDirt (the real SynthDef)
+    //   \inject       — extra params to inject into SuperDirt args
+    // If not an alias, semanticName == dirtName and inject is empty.
+    *resolveAlias { |synthName|
+        var alias = synthAliases[synthName];
+        if(alias.notNil) {
+            ^(\semanticName: synthName, \dirtName: alias[\realSynth], \inject: alias[\inject])
+        } {
+            ^(\semanticName: synthName, \dirtName: synthName, \inject: ())
+        }
     }
 
     *start { |listenPort = 57120, replyPort = 9601, replyHost = "127.0.0.1"|
@@ -216,6 +244,7 @@ CorallineAgent {
 
     *handlePlay { |msg|
         var synthName, note, semantics, rawParams, resolved, args, pipeIdx;
+        var aliasInfo, semanticName, dirtName, injectParams;
 
         // msg format: ['/coralline/play', synthName, n, key1, val1, ... | rawKey1, rawVal1, ...]
         if(msg.size < 3) {
@@ -225,6 +254,12 @@ CorallineAgent {
 
         synthName = msg[1].asSymbol;
         note = msg[2].asFloat;  // this is 'n', not MIDI
+
+        // Resolve synth alias (e.g. superfm_v3 → superfm + voice:3)
+        aliasInfo = this.resolveAlias(synthName);
+        semanticName = aliasInfo[\semanticName];
+        dirtName = aliasInfo[\dirtName];
+        injectParams = aliasInfo[\inject];
 
         // Find pipe separator index (if any)
         pipeIdx = nil;
@@ -258,14 +293,19 @@ CorallineAgent {
             };
         };
 
-        // Resolve semantic params through CorallineSemantics
-        resolved = CorallineSemantics.resolveAll(synthName, semantics);
+        // Resolve semantic params through CorallineSemantics (using alias name)
+        resolved = CorallineSemantics.resolveAll(semanticName, semantics);
 
-        // Build SuperDirt args — use 'n' not 'midinote'
-        args = ["s", synthName.asString, "n", note];
+        // Build SuperDirt args — use dirtName (real SynthDef name), 'n' not 'midinote'
+        args = ["s", dirtName.asString, "n", note];
 
         // Add resolved semantic params
         resolved.keysValuesDo { |param, val|
+            args = args ++ [param.asString, val];
+        };
+
+        // Add injected alias params (e.g. voice:3 for superfm_v3)
+        injectParams.keysValuesDo { |param, val|
             args = args ++ [param.asString, val];
         };
 
@@ -283,8 +323,9 @@ CorallineAgent {
 
         this.sendToDirt(args);
 
-        "CorallineAgent: play % n % → sem:% raw:%".format(
-            synthName, note, resolved, rawParams
+        "CorallineAgent: play % n % → sem:% raw:% alias:%".format(
+            semanticName, note, resolved, rawParams,
+            if(dirtName != semanticName) { dirtName } { "none" }
         ).postln;
     }
 
@@ -310,6 +351,7 @@ CorallineAgent {
         //   /coralline/loop/start myloop supersaw "0 3 7" 2.0 brightness 0.7 | krush 3
         var loopName, synthName, noteStr, cycleDur, notes, dur;
         var semantics, rawParams, resolved, extraPairs, pipeIdx;
+        var aliasInfo, semanticName, dirtName, injectParams;
 
         if(msg.size < 5) {
             "CorallineAgent: loop needs loopName, synthName, notePattern, cycleDur".warn;
@@ -320,6 +362,12 @@ CorallineAgent {
         synthName = msg[2].asSymbol;
         noteStr = msg[3].asString;
         cycleDur = msg[4].asFloat;
+
+        // Resolve synth alias (e.g. superfm_v3 → superfm + voice:3)
+        aliasInfo = this.resolveAlias(synthName);
+        semanticName = aliasInfo[\semanticName];
+        dirtName = aliasInfo[\dirtName];
+        injectParams = aliasInfo[\inject];
 
         // Parse note pattern: "0 3 7 12" → [0, 3, 7, 12]
         notes = noteStr.split($ ).collect(_.asFloat);
@@ -355,14 +403,17 @@ CorallineAgent {
             };
         };
 
-        // Resolve semantic params
+        // Resolve semantic params (using alias name)
         resolved = if(semantics.size > 0) {
-            CorallineSemantics.resolveAll(synthName, semantics);
+            CorallineSemantics.resolveAll(semanticName, semantics);
         } { () };
 
-        // Build extra Pbind pairs from resolved + raw
+        // Build extra Pbind pairs from resolved + injected alias + raw
         extraPairs = [];
         resolved.keysValuesDo { |param, val|
+            extraPairs = extraPairs ++ [param, val];
+        };
+        injectParams.keysValuesDo { |param, val|
             extraPairs = extraPairs ++ [param, val];
         };
         rawParams.keysValuesDo { |param, val|
@@ -370,10 +421,11 @@ CorallineAgent {
         };
 
         // Create or replace a Pdef (JITLib hot-swaps naturally)
+        // Use dirtName (real SynthDef name) for SuperDirt
         Pdef(loopName,
             Pbind(
                 \type, \dirt,
-                \s, synthName.asString,
+                \s, dirtName.asString,
                 \n, Pseq(notes, inf),
                 \dur, dur,
                 \gain, rawParams[\gain] ? 1.0,
@@ -384,8 +436,9 @@ CorallineAgent {
 
         loops[loopName] = Pdef(loopName);
 
-        "CorallineAgent: loop '%' started — % playing % (cycle %s, sem:% raw:%)".format(
-            loopName, synthName, notes, cycleDur, resolved, rawParams
+        "CorallineAgent: loop '%' started — % playing % (cycle %s, sem:% raw:% alias:%)".format(
+            loopName, semanticName, notes, cycleDur, resolved, rawParams,
+            if(dirtName != semanticName) { dirtName } { "none" }
         ).postln;
     }
 
@@ -407,6 +460,7 @@ CorallineAgent {
         // msg: ['/coralline/phrase', synthName, notePattern, durPerNote, ...params...]
         var synthName, noteStr, durPerNote, notes, numNotes;
         var semGradients, rawGradients, pipeIdx;
+        var aliasInfo, semanticName, dirtName, injectParams;
 
         if(msg.size < 4) {
             "CorallineAgent: /coralline/phrase needs synthName, notePattern, durPerNote".warn;
@@ -416,6 +470,12 @@ CorallineAgent {
         synthName = msg[1].asSymbol;
         noteStr = msg[2].asString;
         durPerNote = msg[3].asFloat;
+
+        // Resolve synth alias (e.g. superfm_v3 → superfm + voice:3)
+        aliasInfo = this.resolveAlias(synthName);
+        semanticName = aliasInfo[\semanticName];
+        dirtName = aliasInfo[\dirtName];
+        injectParams = aliasInfo[\inject];
 
         notes = noteStr.split($ ).collect(_.asFloat);
         numNotes = notes.size;
@@ -456,18 +516,23 @@ CorallineAgent {
                 // Interpolate semantic gradients at position t
                 semantics = this.prInterpolateGradients(semGradients, t);
 
-                // Resolve through CorallineSemantics
+                // Resolve through CorallineSemantics (using alias name)
                 resolved = if(semantics.size > 0) {
-                    CorallineSemantics.resolveAll(synthName, semantics);
+                    CorallineSemantics.resolveAll(semanticName, semantics);
                 } { () };
 
                 // Interpolate raw gradients at position t
                 rawParams = this.prInterpolateGradients(rawGradients, t);
 
-                // Build SuperDirt args
-                args = ["s", synthName.asString, "n", note];
+                // Build SuperDirt args (using dirtName for real SynthDef)
+                args = ["s", dirtName.asString, "n", note];
 
                 resolved.keysValuesDo { |param, val|
+                    args = args ++ [param.asString, val];
+                };
+
+                // Add injected alias params (e.g. voice:3 for superfm_v3)
+                injectParams.keysValuesDo { |param, val|
                     args = args ++ [param.asString, val];
                 };
 
@@ -490,12 +555,13 @@ CorallineAgent {
             };
 
             "CorallineAgent: phrase complete — % % notes, %s/note".format(
-                synthName, numNotes, durPerNote
+                semanticName, numNotes, durPerNote
             ).postln;
         };
 
-        "CorallineAgent: phrase started — % % notes, %s/note sem:% raw:%".format(
-            synthName, numNotes, durPerNote, semGradients.keys, rawGradients.keys
+        "CorallineAgent: phrase started — % % notes, %s/note sem:% raw:% alias:%".format(
+            semanticName, numNotes, durPerNote, semGradients.keys, rawGradients.keys,
+            if(dirtName != semanticName) { dirtName } { "none" }
         ).postln;
     }
 
