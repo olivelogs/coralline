@@ -81,13 +81,44 @@ export interface StatePong {
   running: number;
 }
 
-export interface AudioPong {
+// Instantaneous snapshot (window = 0)
+export interface AudioSnapshotPong {
+  kind: "snapshot";
   rms: number;
   centroid: number;
   flatness: number;
   freq: number;
   hasFreq: number;
   onsetRate: number;
+}
+
+// Windowed summary of the last N seconds (window > 0)
+export interface AudioWindowPong {
+  kind: "window";
+  window: number;
+  span: number;
+  frames: number;
+  active_ratio: number;
+  rms_mean: number;
+  rms_max: number;
+  rms_min: number;
+  centroid_mean: number;
+  flatness_mean: number;
+  freq_median: number;
+  pitch_stability: number;
+  onset_count: number;
+  onset_rate: number;
+  rms_series: number[];
+  centroid_series: number[];
+}
+
+export type AudioPong = AudioSnapshotPong | AudioWindowPong;
+
+export interface ClipPong {
+  path: string;
+  duration: number;
+  sample_rate: number;
+  error: string;
 }
 
 // ---- Pending pong (FIFO queue entries) ----
