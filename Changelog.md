@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.6] - 2026-06-09
+### Added
+- **Windowed `get_audio`.** `get_audio` now summarizes the last N seconds (default 4, `window` param, 0 = old instantaneous snapshot) instead of a single control-period snapshot that often landed between notes. CorallineAnalysis keeps a sclang-side ring of analysis frames (10 Hz × 60 s); the windowed reply carries level stats (mean/max/min rms), spectral centroid/flatness means over *active* frames (silence doesn't drag them down), median pitch + pitch stability, onset count/rate within the window, `active_ratio` (sound vs silence), and 12-point rms/centroid time-series showing the shape of the window. `/coralline/ping/audio` takes an optional third arg (window seconds); the pong shape with no `window` key is unchanged for back-compat.
+- **`get_audio_clip` tool.** Saves the last N seconds (default 8, max 60) of the master bus to a wav in `recordings/` at the repo root (gitignored, kept as snippets-of-the-past) and returns the path — for deep offline analysis with external tools (e.g. audio-analyzer-rs: frequency bands, key, tempo, stereo field). Server-side stereo audio ring (`\corallineClipRec`, Phasor + BufWr) records continuously while the analyzer runs; `CorallineAnalysis.saveClip(duration, action)` unwraps the ring and writes int24 WAV. New OSC pair `/coralline/ping/clip` → `/coralline/pong/clip`.
+
+### Fixed
+- `onset_rate` no longer depends on when you last asked. It was computed as the onset-count delta since the previous `get_audio` call, so the first call after a long pause averaged over minutes. Windowed analysis counts onsets inside the window; the snapshot path keeps the old behavior.
+- Windowed spectral stats NaN-guard: FFT analysis of silence can produce NaN, which would have poisoned every windowed mean.
+
 ## [0.1.5] - 2026-06-08
 ### Added
 - `get_diagnostics` tool: inspects which processes hold the SuperCollider ports (57110/57120) and the MCP's reply port, checks the ping→pong path, and auto-flags duplicate/zombie SuperCollider processes and the `sclang`/`scsynth` shared-socket (FD inheritance) bug. macOS-only (uses `lsof`).

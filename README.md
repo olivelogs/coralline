@@ -62,7 +62,7 @@ To Claude's config (in Claude Desktop settings -> Developer -> Edit Config), add
 
 Restart Claude Desktop. You should see the "coralline" in the list of local MCP servers in the Developer tab.  
 
-v0.1.5 exposes nine tools to Claude:  
+v0.1.6 exposes ten tools to Claude:  
 
 | tool              | function                                                  |
 |-------------------|-----------------------------------------------------------|
@@ -70,7 +70,8 @@ v0.1.5 exposes nine tools to Claude:
 | `loop_start`      | start or modify a named pattern loop                      |
 | `loop_stop`       | stop a named loop (manual stop with cmd + . on mac)       |
 | `get_state`       | get state of SC (current loops, if CorallineAgent is on)  |
-| `get_audio`       | "listen", requests quick audio analysis of rolling buffer |
+| `get_audio`       | "listen" — summarize the last N seconds (default 4): level stats, brightness, texture, pitch, onsets, rms/centroid time-series |
+| `get_audio_clip`  | save the last N seconds of audio to a wav for deep analysis with external tools |
 | `list_synths`     | show Claude available synths                              |
 | `get_synth_info`  | show Claude available params for synths                   |
 | `get_fx`          | show Claude available effects                             |
@@ -94,7 +95,7 @@ The post window should show:
 Installing Coralline
 Adding path: /Users/.../coralline/quark/Coralline
 Coralline installed
--> Quark: Coralline[0.1.5]
+-> Quark: Coralline[0.1.6]
 -> a Main
 ```
   

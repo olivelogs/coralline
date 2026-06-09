@@ -8,7 +8,10 @@
 //    - /coralline/loop/modify → hot-swap a running loop
 //    - /coralline/phrase      → one-shot phrase with gradient params
 //    - /coralline/ping/state  → request state (pong)
-//    - /coralline/ping/audio  → request audio analysis snapshot (pong via CorallineAnalysis)
+//    - /coralline/ping/audio  → request audio analysis (pong via CorallineAnalysis);
+//                               optional window arg summarizes the last N seconds,
+//                               window 0 / omitted = instantaneous snapshot
+//    - /coralline/ping/clip   → write last N seconds of audio to a wav (pong with path)
 //    - /coralline/listen/start → start continuous audio analysis pong
 //    - /coralline/listen/stop  → stop continuous audio analysis pong
 //    - /coralline/pong/        → outbound analysis/state data
@@ -86,16 +89,40 @@ CorallineAgent {
         this.registerResponders;
 
         // Set up audio analysis with pong callback
-        // reqId is threaded through from ping → pong for request matching
+        // reqId is threaded through from ping → pong for request matching.
+        // Two shapes: windowed summaries carry \window (from getWindowAnalysis),
+        // snapshots don't. Series are sent as comma-joined strings — flat OSC
+        // key-value pairs can't nest arrays.
         CorallineAnalysis.pongCallback = { |a, reqId, reply|
-            var msg = ['/coralline/pong/audio',
-                "rms",       a[\rms],
-                "centroid",  a[\centroid],
-                "flatness",  a[\flatness],
-                "freq",      a[\freq],
-                "hasFreq",   a[\hasFreq],
-                "onsetRate", a[\onsetRate]
-            ];
+            var msg;
+            if(a[\window].notNil) {
+                msg = ['/coralline/pong/audio',
+                    "window",          a[\window],
+                    "span",            a[\span],
+                    "frames",          a[\frames],
+                    "active_ratio",    a[\active_ratio],
+                    "rms_mean",        a[\rms_mean],
+                    "rms_max",         a[\rms_max],
+                    "rms_min",         a[\rms_min],
+                    "centroid_mean",   a[\centroid_mean],
+                    "flatness_mean",   a[\flatness_mean],
+                    "freq_median",     a[\freq_median],
+                    "pitch_stability", a[\pitch_stability],
+                    "onset_count",     a[\onset_count],
+                    "onset_rate",      a[\onset_rate],
+                    "rms_series",      a[\rms_series].collect(_.round(0.0001)).join(","),
+                    "centroid_series", a[\centroid_series].collect(_.round(1)).join(",")
+                ];
+            } {
+                msg = ['/coralline/pong/audio',
+                    "rms",       a[\rms],
+                    "centroid",  a[\centroid],
+                    "flatness",  a[\flatness],
+                    "freq",      a[\freq],
+                    "hasFreq",   a[\hasFreq],
+                    "onsetRate", a[\onsetRate]
+                ];
+            };
             if(reqId.notNil) { msg = msg ++ ["reqId", reqId] };
             (reply ? replyAddr).sendMsg(*msg);
         };
@@ -207,15 +234,47 @@ CorallineAgent {
         );
 
         // ==========================================
-        // /coralline/ping/audio — Request audio analysis snapshot
+        // /coralline/ping/audio — Request audio analysis
         // ==========================================
-        // Returns /coralline/pong/audio with rms, centroid, flatness, freq, hasFreq
+        // Args: reqId, replyPort, [window]
+        // window > 0 → /coralline/pong/audio summarizing the last N seconds
+        // (stats + rms/centroid time-series); window 0 or omitted → snapshot
+        // with rms, centroid, flatness, freq, hasFreq, onsetRate
         oscResponders = oscResponders.add(
             OSCdef(\corallinePingAudio, { |msg, time, addr, recvPort|
                 var reqId = if(msg.size > 1) { msg[1].asString } { nil };
                 var reply = this.replyTo(if(msg.size > 2) { msg[2].asInteger } { nil });
-                CorallineAnalysis.handlePingAudio(reqId, reply);
+                var window = if(msg.size > 3) { msg[3].asFloat } { 0 };
+                CorallineAnalysis.handlePingAudio(reqId, reply, window);
             }, '/coralline/ping/audio')
+        );
+
+        // ==========================================
+        // /coralline/ping/clip — Save recent audio to a wav
+        // ==========================================
+        // Args: reqId, replyPort, [duration]
+        // Writes the last `duration` seconds (default 8) of the master bus
+        // to a wav and returns /coralline/pong/clip with the file path
+        oscResponders = oscResponders.add(
+            OSCdef(\corallinePingClip, { |msg, time, addr, recvPort|
+                var reqId = if(msg.size > 1) { msg[1].asString } { nil };
+                var reply = this.replyTo(if(msg.size > 2) { msg[2].asInteger } { nil });
+                var duration = if(msg.size > 3) { msg[3].asFloat } { 8 };
+                CorallineAnalysis.saveClip(duration, { |path, err, actualDur, sr|
+                    var pong;
+                    if(err.notNil) {
+                        pong = ['/coralline/pong/clip', "error", err];
+                    } {
+                        pong = ['/coralline/pong/clip',
+                            "path",        path,
+                            "duration",    actualDur,
+                            "sample_rate", sr
+                        ];
+                    };
+                    if(reqId.notNil) { pong = pong ++ ["reqId", reqId] };
+                    (reply ? replyAddr).sendMsg(*pong);
+                });
+            }, '/coralline/ping/clip')
         );
 
         // ==========================================

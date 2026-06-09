@@ -1,12 +1,21 @@
 import { Client } from "node-osc";
 import { createSocket, type Socket } from "node:dgram";
 import type { Logger } from "./logger.js";
-import type { AudioPong, PendingPong, StatePong } from "./types.js";
+import type {
+  AudioPong,
+  AudioSnapshotPong,
+  AudioWindowPong,
+  ClipPong,
+  PendingPong,
+  StatePong,
+} from "./types.js";
 
 const SC_HOST = "127.0.0.1";
 export const SC_PORT = 57120; // sclang langPort — SuperDirt / CorallineAgent listen here
 export const SCSYNTH_PORT = 57110; // scsynth server port
 const PONG_TIMEOUT_MS = Number(process.env.CORALLINE_PONG_TIMEOUT_MS) || 5000;
+// Clips pull audio server→sclang→disk before the pong, so they get more headroom
+const CLIP_TIMEOUT_MS = PONG_TIMEOUT_MS * 3;
 const BIND_RETRIES = 3;
 
 type DecodedOscMessage = {
@@ -129,6 +138,7 @@ export class OscServer {
   private socket!: Socket;
   private statePending: Map<string, PendingPong<StatePong>> = new Map();
   private audioPending: Map<string, PendingPong<AudioPong>> = new Map();
+  private clipPending: Map<string, PendingPong<ClipPong>> = new Map();
   private _available = false;
   private _replyPort: number | null = null;
 
@@ -231,6 +241,15 @@ export class OscServer {
         clearTimeout(pending.timer);
         pending.resolve(this.parseAudioPong(args));
       }
+    } else if (path === "/coralline/pong/clip") {
+      const kv = this.parseKV(args);
+      const reqId = kv["reqId"] as string | undefined;
+      if (reqId && this.clipPending.has(reqId)) {
+        const pending = this.clipPending.get(reqId)!;
+        this.clipPending.delete(reqId);
+        clearTimeout(pending.timer);
+        pending.resolve(this.parseClipPong(args));
+      }
     }
   }
 
@@ -318,6 +337,48 @@ export class OscServer {
     });
   }
 
+  awaitClipPong(reqId: string): Promise<ClipPong> {
+    if (!this._available) {
+      return Promise.reject(
+        new Error(
+          "No reply port available — couldn't open a local UDP socket for feedback. " +
+            "play/loop/fx still work; get_state/get_audio do not. See get_diagnostics."
+        )
+      );
+    }
+
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.clipPending.delete(reqId);
+        reject(
+          new Error(
+            `Timed out waiting for /coralline/pong/clip (${CLIP_TIMEOUT_MS}ms). Is SuperCollider running?`
+          )
+        );
+      }, CLIP_TIMEOUT_MS);
+
+      const origResolve = resolve;
+      this.clipPending.set(reqId, {
+        resolve: (val) => {
+          this.logger.log({
+            ts: new Date().toISOString(),
+            dir: "in",
+            src_addr: "127.0.0.1",
+            src_port: SC_PORT,
+            dst_addr: "127.0.0.1",
+            dst_port: this._replyPort ?? 0,
+            path: "/coralline/pong/clip [resolved]",
+            args: [],
+            req_id: reqId,
+          });
+          origResolve(val);
+        },
+        reject,
+        timer,
+      });
+    });
+  }
+
   close(): void {
     this.socket.close();
   }
@@ -341,15 +402,59 @@ export class OscServer {
     };
   }
 
+  // Windowed pongs carry "window"; snapshots don't. Series arrive as
+  // comma-joined strings (flat OSC key-value pairs can't nest arrays).
   private parseAudioPong(args: (string | number)[]): AudioPong {
     const kv = this.parseKV(args);
+
+    if (kv["window"] === undefined) {
+      const snapshot: AudioSnapshotPong = {
+        kind: "snapshot",
+        rms: Number(kv["rms"] ?? 0),
+        centroid: Number(kv["centroid"] ?? 0),
+        flatness: Number(kv["flatness"] ?? 0),
+        freq: Number(kv["freq"] ?? 0),
+        hasFreq: Number(kv["hasFreq"] ?? 0),
+        onsetRate: Number(kv["onsetRate"] ?? 0),
+      };
+      return snapshot;
+    }
+
+    const parseSeries = (raw: unknown): number[] =>
+      String(raw ?? "")
+        .split(",")
+        .filter(Boolean)
+        .map(Number)
+        .filter(Number.isFinite);
+
+    const windowed: AudioWindowPong = {
+      kind: "window",
+      window: Number(kv["window"] ?? 0),
+      span: Number(kv["span"] ?? 0),
+      frames: Number(kv["frames"] ?? 0),
+      active_ratio: Number(kv["active_ratio"] ?? 0),
+      rms_mean: Number(kv["rms_mean"] ?? 0),
+      rms_max: Number(kv["rms_max"] ?? 0),
+      rms_min: Number(kv["rms_min"] ?? 0),
+      centroid_mean: Number(kv["centroid_mean"] ?? 0),
+      flatness_mean: Number(kv["flatness_mean"] ?? 0),
+      freq_median: Number(kv["freq_median"] ?? 0),
+      pitch_stability: Number(kv["pitch_stability"] ?? 0),
+      onset_count: Number(kv["onset_count"] ?? 0),
+      onset_rate: Number(kv["onset_rate"] ?? 0),
+      rms_series: parseSeries(kv["rms_series"]),
+      centroid_series: parseSeries(kv["centroid_series"]),
+    };
+    return windowed;
+  }
+
+  private parseClipPong(args: (string | number)[]): ClipPong {
+    const kv = this.parseKV(args);
     return {
-      rms: Number(kv["rms"] ?? 0),
-      centroid: Number(kv["centroid"] ?? 0),
-      flatness: Number(kv["flatness"] ?? 0),
-      freq: Number(kv["freq"] ?? 0),
-      hasFreq: Number(kv["hasFreq"] ?? 0),
-      onsetRate: Number(kv["onsetRate"] ?? 0),
+      path: String(kv["path"] ?? ""),
+      duration: Number(kv["duration"] ?? 0),
+      sample_rate: Number(kv["sample_rate"] ?? 0),
+      error: String(kv["error"] ?? ""),
     };
   }
 }
