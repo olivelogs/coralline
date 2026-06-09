@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.5] - 2026-06-08
+### Added
+- `get_diagnostics` tool: inspects which processes hold the SuperCollider ports (57110/57120) and the MCP's reply port, checks the ping→pong path, and auto-flags duplicate/zombie SuperCollider processes and the `sclang`/`scsynth` shared-socket (FD inheritance) bug. macOS-only (uses `lsof`).
+
+### Changed
+- **Per-client reply ports.** Each MCP instance now binds its own OS-assigned ephemeral UDP port instead of the fixed `9601`, and every ping carries its reply port so SuperCollider answers the right client. Multiple clients (e.g. Claude Code and chat) can now both use `get_state`/`get_audio` at once. CorallineAgent falls back to the fixed `9601` reply address when a ping omits a port (back-compat).
+
+### Fixed
+- The `9601` "port held by another instance" failures are gone — there's no shared port to contend for, so the EADDRINUSE race, the false "held by another instance" error, and the stale-port-after-crash problem no longer apply. Removed the now-unneeded pidfile coordination.
+- `get_diagnostics` liveness check now sends its reply port on the ping (matching `get_state`). Previously it omitted the port, so SuperCollider replied to the fallback `9601` and the diagnostic reported a false "no pong" even when `get_state` worked.
+
+### Removed
+- Pidfile (`coralline.pid`) and its stale-process cleanup — only existed to coordinate the shared port, which no longer exists. Supersedes the 0.1.3 graceful-port-sharing degrade.
+
 ## [0.1.4] - 2026-03-28
 ### Added
 - Added SuperDirt synth superfm to mappings: `CorallineSemantics.sc` now has a synth alias for four superfm presets (1 through 4). These resolve semantics against their own mappings, then send `superfm` + `voice: N` to SuperDirt.

@@ -25,6 +25,7 @@ CorallineAnalysis {
     classvar <analyzerRunning;  // Boolean
     classvar <listenTask;       // SkipJack for continuous pong mode
     classvar <listenRate;       // Pong rate in Hz when listening
+    classvar <listenReplyAddr;  // NetAddr the active listen stream replies to (nil = fallback)
     classvar <>pongCallback;    // Function receiving analysis Event
 
     // Onset rate tracking (sclang-side state)
@@ -37,6 +38,7 @@ CorallineAnalysis {
         analyzerRunning = false;
         listenTask = nil;
         listenRate = 4;  // default: 4 pongs per second
+        listenReplyAddr = nil;
         pongCallback = nil;
         lastOnsetCount = 0;
         lastOnsetTime = 0;
@@ -169,17 +171,21 @@ CorallineAnalysis {
 
     // Send a single audio analysis pong via the callback.
     // reqId is passed through for ping/pong matching (nil for continuous listening).
-    *sendAudioPong { |reqId|
+    // reply is the per-request NetAddr (nil → callback uses the fallback replyAddr).
+    *sendAudioPong { |reqId, reply|
         var a = this.getAnalysis;
         if(pongCallback.notNil) {
-            pongCallback.value(a, reqId);
+            pongCallback.value(a, reqId, reply);
         };
     }
 
-    // Start continuous listening — sends pong at the given rate.
-    *startListening { |rate|
+    // Start continuous listening — sends pong at the given rate to `reply`.
+    // Note: a single analyzer drives one stream; if two clients start listening
+    // the most recent reply target wins.
+    *startListening { |rate, reply|
         rate = rate ?? { listenRate };
         listenRate = rate;
+        listenReplyAddr = reply;
 
         this.stopListening;  // clear any existing
 
@@ -189,7 +195,7 @@ CorallineAnalysis {
         };
 
         listenTask = SkipJack(
-            { this.sendAudioPong },
+            { this.sendAudioPong(nil, listenReplyAddr) },
             dt: rate.reciprocal,
             stopTest: { analyzerRunning.not },
             name: "CorallineAudioPong"
@@ -203,17 +209,18 @@ CorallineAnalysis {
         if(listenTask.notNil) {
             listenTask.stop;
             listenTask = nil;
+            listenReplyAddr = nil;
             "CorallineAnalysis: stopped listening.".postln;
         };
     }
 
-    *handlePingAudio { |reqId|
+    *handlePingAudio { |reqId, reply|
         if(analyzerRunning.not) {
             "CorallineAnalysis: analyzer not running — call .startAnalyzer first".warn;
             ^this
         };
 
-        this.sendAudioPong(reqId);
+        this.sendAudioPong(reqId, reply);
     }
 
     // Quick check: what does the room sound like right now?
