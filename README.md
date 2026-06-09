@@ -62,7 +62,7 @@ To Claude's config (in Claude Desktop settings -> Developer -> Edit Config), add
 
 Restart Claude Desktop. You should see the "coralline" in the list of local MCP servers in the Developer tab.  
 
-v0.1.4 exposes eight tools to Claude:  
+v0.1.5 exposes nine tools to Claude:  
 
 | tool              | function                                                  |
 |-------------------|-----------------------------------------------------------|
@@ -74,6 +74,7 @@ v0.1.4 exposes eight tools to Claude:
 | `list_synths`     | show Claude available synths                              |
 | `get_synth_info`  | show Claude available params for synths                   |
 | `get_fx`          | show Claude available effects                             |
+| `get_diagnostics` | inspect SC/MCP port plumbing and the feedback path (macOS)|
 
 **known bug: `play` may fall into a deferred tools list in Claude Desktop. if Claude does not see it, Claude should call tool search explicitly**  
   
@@ -93,7 +94,7 @@ The post window should show:
 Installing Coralline
 Adding path: /Users/.../coralline/quark/Coralline
 Coralline installed
--> Quark: Coralline[0.1.4]
+-> Quark: Coralline[0.1.5]
 -> a Main
 ```
   
@@ -158,7 +159,7 @@ CorallineSemantics: loaded 29 synths, 323 timbral curves from 'refined_mappings.
 After running `CorallineAgent.start;` you should see this in the post window:
 ```txt
 CorallineAgent: responders registered.
-CorallineAgent: listening on port 57120, replies to 127.0.0.1:9601
+CorallineAgent: listening on port 57120, fallback reply 127.0.0.1:9601 (pings carry their own reply port)
 CorallineAnalysis: audio analyzer started (listening on bus 0).
 ```
 
@@ -171,8 +172,9 @@ CorallineAnalysis: audio analyzer started (listening on bus 0).
 - First just run `s.quit`, then `Server.killAll` in SCIDE. Recompile (cmd + shift + L on Mac), and re-boot the SuperDirt server from the startup file again. 
 - If that does not work, check that SuperDirt and CorallineAgent are running on the correct port (`57120`). I am working on adjusting the MCP to make ports configurable in case this happens.
 - SuperCollider handles raw audio, which doesn't always get along with bluetooth headphones. If you're running into trouble here, I recommend using your built-in speakers (check audio MIDI settings in Mac) and building from there.
-#### If pong is not working
-- MacOS allows multiple UDP sockets to run on a port. Run `lsof -li UDP:9601` in terminal to show running processes. Run `lsof -ti :9601 | xargs kill` to kill *all* processes on port 9601. 
+#### If get_state / get_audio are not working
+- As of v0.1.5, each MCP client opens its own ephemeral reply port (no shared `9601`), so multiple clients (e.g. Claude Code and chat) can both receive feedback. Ask Claude to run `get_diagnostics` — it reports which processes hold the SuperCollider ports, the MCP's reply port, whether the ping→pong path is live, and flags duplicate/zombie SuperCollider processes.
+- If `get_diagnostics` flags a shared socket between `sclang` and `scsynth` on `57120`, that's the FD-inheritance bug — quit SC (`s.quit`, then `Server.killAll`), recompile (cmd + shift + L), and reboot cleanly from the startup file.
 
 ### Using SuperCollider
 I strongly recommend orienting yourself in the SuperCollider IDE if you have not used it before. Read through a few pages of the docs (which are displayed in the IDE) and learn how to run code inside the SCIDE. You don't need to know sclang to use these tools - but SuperCollider is the backbone of the tooling, so you'll be in there often!

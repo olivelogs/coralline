@@ -87,7 +87,7 @@ CorallineAgent {
 
         // Set up audio analysis with pong callback
         // reqId is threaded through from ping → pong for request matching
-        CorallineAnalysis.pongCallback = { |a, reqId|
+        CorallineAnalysis.pongCallback = { |a, reqId, reply|
             var msg = ['/coralline/pong/audio',
                 "rms",       a[\rms],
                 "centroid",  a[\centroid],
@@ -97,12 +97,12 @@ CorallineAgent {
                 "onsetRate", a[\onsetRate]
             ];
             if(reqId.notNil) { msg = msg ++ ["reqId", reqId] };
-            replyAddr.sendMsg(*msg);
+            (reply ? replyAddr).sendMsg(*msg);
         };
         CorallineAnalysis.startAnalyzer;
 
         isRunning = true;
-        "CorallineAgent: listening on port %, replies to %:%".format(
+        "CorallineAgent: listening on port %, fallback reply %:% (pings carry their own reply port)".format(
             listenPort, replyHost, replyPort
         ).postln;
     }
@@ -201,7 +201,8 @@ CorallineAgent {
         oscResponders = oscResponders.add(
             OSCdef(\corallinePingState, { |msg, time, addr, recvPort|
                 var reqId = if(msg.size > 1) { msg[1].asString } { nil };
-                this.handlePingState(reqId);
+                var reply = this.replyTo(if(msg.size > 2) { msg[2].asInteger } { nil });
+                this.handlePingState(reqId, reply);
             }, '/coralline/ping/state')
         );
 
@@ -212,7 +213,8 @@ CorallineAgent {
         oscResponders = oscResponders.add(
             OSCdef(\corallinePingAudio, { |msg, time, addr, recvPort|
                 var reqId = if(msg.size > 1) { msg[1].asString } { nil };
-                CorallineAnalysis.handlePingAudio(reqId);
+                var reply = this.replyTo(if(msg.size > 2) { msg[2].asInteger } { nil });
+                CorallineAnalysis.handlePingAudio(reqId, reply);
             }, '/coralline/ping/audio')
         );
 
@@ -224,7 +226,8 @@ CorallineAgent {
         oscResponders = oscResponders.add(
             OSCdef(\corallineListenStart, { |msg, time, addr, recvPort|
                 var rate = if(msg.size > 1) { msg[1].asFloat } { CorallineAnalysis.listenRate };
-                CorallineAnalysis.startListening(rate);
+                var reply = this.replyTo(if(msg.size > 2) { msg[2].asInteger } { nil });
+                CorallineAnalysis.startListening(rate, reply);
             }, '/coralline/listen/start')
         );
 
@@ -620,7 +623,18 @@ CorallineAgent {
 
     // ---- Ping/Pong handlers ----
 
-    *handlePingState { |reqId|
+    // Resolve a client-supplied reply port to a NetAddr. Each client sends its
+    // own ephemeral port in the ping, so concurrent clients each get their pong.
+    // Falls back to the fixed replyAddr when a ping omits the port (back-compat).
+    *replyTo { |replyPort|
+        ^if(replyPort.notNil and: { replyPort > 0 }) {
+            NetAddr("127.0.0.1", replyPort)
+        } {
+            replyAddr
+        }
+    }
+
+    *handlePingState { |reqId, reply|
         var activeLoops, msg;
 
         activeLoops = loops.keys.asArray;
@@ -638,7 +652,7 @@ CorallineAgent {
 
         if(reqId.notNil) { msg = msg ++ ["reqId", reqId] };
 
-        replyAddr.sendMsg(*msg);
+        (reply ? replyAddr).sendMsg(*msg);
 
         "CorallineAgent: pong/state sent → % active loops".format(activeLoops.size).postln;
     }

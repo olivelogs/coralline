@@ -4,9 +4,10 @@ import type { Logger } from "./logger.js";
 import type { AudioPong, PendingPong, StatePong } from "./types.js";
 
 const SC_HOST = "127.0.0.1";
-const SC_PORT = 57120;
-const LISTEN_PORT = 9601;
+export const SC_PORT = 57120; // sclang langPort — SuperDirt / CorallineAgent listen here
+export const SCSYNTH_PORT = 57110; // scsynth server port
 const PONG_TIMEOUT_MS = Number(process.env.CORALLINE_PONG_TIMEOUT_MS) || 5000;
+const BIND_RETRIES = 3;
 
 type DecodedOscMessage = {
   address: string;
@@ -121,24 +122,40 @@ export class OscClient {
 }
 
 // ---- OSC Server (pong listener via dgram) ----
-// Uses a minimal local OSC decoder for Coralline's pong message shapes
-// and exclusive binding to prevent zombie process port conflicts.
+// Uses a minimal local OSC decoder for Coralline's pong message shapes.
+// Binds an ephemeral port so multiple clients never contend for one socket.
 
 export class OscServer {
-  private socket: Socket;
+  private socket!: Socket;
   private statePending: Map<string, PendingPong<StatePong>> = new Map();
   private audioPending: Map<string, PendingPong<AudioPong>> = new Map();
-  private _available = true;
+  private _available = false;
+  private _replyPort: number | null = null;
 
-  /** Whether the pong listener is active (false if port was already in use) */
+  /** Whether the reply listener bound successfully (false only if we ran out of FDs). */
   get available(): boolean {
     return this._available;
   }
 
-  constructor(private readonly logger: Logger) {
-    this.socket = createSocket({ type: "udp4", reuseAddr: false });
+  /** The ephemeral UDP port SuperCollider should send pongs to (null if unbound). */
+  get replyPort(): number | null {
+    return this._replyPort;
+  }
 
-    this.socket.on("message", (buf, rinfo) => {
+  constructor(private readonly logger: Logger) {
+    this.bindEphemeral(BIND_RETRIES);
+  }
+
+  // Bind to an OS-assigned ephemeral port (port 0). Unlike a fixed shared port,
+  // this never collides — the kernel only ever hands back a free port — so
+  // multiple clients (Code, chat, …) each get their own and never contend.
+  // The only realistic failure is FD exhaustion, which we retry a few times
+  // then degrade gracefully (play/loop/fx don't need a reply port).
+  private bindEphemeral(attemptsLeft: number): void {
+    const socket = createSocket({ type: "udp4" });
+    this.socket = socket;
+
+    socket.on("message", (buf, rinfo) => {
       try {
         const parsed = decodeOscMessage(buf);
         this.handleMessage(parsed.address, parsed.args, rinfo);
@@ -149,25 +166,34 @@ export class OscServer {
       }
     });
 
-    this.socket.on("error", (err: Error & { code?: string }) => {
-      if (err.code === "EADDRINUSE") {
-        this._available = false;
+    socket.on("error", (err: Error) => {
+      if (!this._available && attemptsLeft > 0) {
         console.error(
-          `[osc] port ${LISTEN_PORT} in use by another coralline-mcp instance. ` +
-            `play/loop/synth/fx tools will work, but get_state and get_audio ` +
-            `require the other instance.`
+          `[osc] reply port bind failed (${err.message}); retrying (${attemptsLeft} left)`
+        );
+        try {
+          socket.close();
+        } catch {
+          // already closed
+        }
+        this.bindEphemeral(attemptsLeft - 1);
+        return;
+      }
+      if (!this._available) {
+        console.error(
+          `[osc] could not open a reply port: ${err.message}. ` +
+            `play/loop/synth/fx still work, but get_state and get_audio are unavailable.`
         );
         return;
       }
       console.error("[osc] server error:", err.message);
     });
 
-    this.socket.bind(
-      { port: LISTEN_PORT, address: "0.0.0.0", exclusive: true },
-      () => {
-        console.error(`[osc] listening on port ${LISTEN_PORT} (exclusive)`);
-      }
-    );
+    socket.bind({ port: 0, address: SC_HOST }, () => {
+      this._available = true;
+      this._replyPort = socket.address().port;
+      console.error(`[osc] reply listener on ${SC_HOST}:${this._replyPort}`);
+    });
   }
 
   private handleMessage(
@@ -181,7 +207,7 @@ export class OscServer {
       src_addr: rinfo.address,
       src_port: rinfo.port,
       dst_addr: "127.0.0.1",
-      dst_port: LISTEN_PORT,
+      dst_port: this._replyPort ?? 0,
       path,
       args,
       req_id: null,
@@ -212,8 +238,8 @@ export class OscServer {
     if (!this._available) {
       return Promise.reject(
         new Error(
-          "Port 9601 is held by another coralline-mcp instance (likely Claude Desktop). " +
-            "Use get_state from that client, or close it to free the port."
+          "No reply port available — couldn't open a local UDP socket for feedback. " +
+            "play/loop/fx still work; get_state/get_audio do not. See get_diagnostics."
         )
       );
     }
@@ -237,7 +263,7 @@ export class OscServer {
             src_addr: "127.0.0.1",
             src_port: SC_PORT,
             dst_addr: "127.0.0.1",
-            dst_port: LISTEN_PORT,
+            dst_port: this._replyPort ?? 0,
             path: "/coralline/pong/state [resolved]",
             args: [],
             req_id: reqId,
@@ -254,8 +280,8 @@ export class OscServer {
     if (!this._available) {
       return Promise.reject(
         new Error(
-          "Port 9601 is held by another coralline-mcp instance (likely Claude Desktop). " +
-            "Use get_audio from that client, or close it to free the port."
+          "No reply port available — couldn't open a local UDP socket for feedback. " +
+            "play/loop/fx still work; get_state/get_audio do not. See get_diagnostics."
         )
       );
     }
@@ -279,7 +305,7 @@ export class OscServer {
             src_addr: "127.0.0.1",
             src_port: SC_PORT,
             dst_addr: "127.0.0.1",
-            dst_port: LISTEN_PORT,
+            dst_port: this._replyPort ?? 0,
             path: "/coralline/pong/audio [resolved]",
             args: [],
             req_id: reqId,

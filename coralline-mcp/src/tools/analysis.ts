@@ -18,7 +18,11 @@ export function registerAnalysisTools(
       try {
         // Register listener BEFORE sending ping to avoid race condition
         const pongPromise = oscServer.awaitStatePong(reqId);
-        oscClient.send("/coralline/ping/state", [reqId], reqId);
+        oscClient.send(
+          "/coralline/ping/state",
+          [reqId, oscServer.replyPort ?? 0],
+          reqId
+        );
         const pong = await pongPromise;
 
         const loopNames = pong.loop_names
@@ -53,7 +57,11 @@ export function registerAnalysisTools(
       const reqId = randomUUID();
       try {
         const pongPromise = oscServer.awaitAudioPong(reqId);
-        oscClient.send("/coralline/ping/audio", [reqId], reqId);
+        oscClient.send(
+          "/coralline/ping/audio",
+          [reqId, oscServer.replyPort ?? 0],
+          reqId
+        );
         const pong = await pongPromise;
 
         const result = {
