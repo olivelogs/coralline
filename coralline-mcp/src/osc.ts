@@ -7,8 +7,10 @@ import type {
   AudioWindowPong,
   ClipPong,
   PendingPong,
+  SemanticDimension,
   StatePong,
 } from "./types.js";
+import { SEMANTIC_DIMENSIONS } from "./types.js";
 
 const SC_HOST = "127.0.0.1";
 export const SC_PORT = 57120; // sclang langPort — SuperDirt / CorallineAgent listen here
@@ -445,6 +447,13 @@ export class OscServer {
       rms_series: parseSeries(kv["rms_series"]),
       centroid_series: parseSeries(kv["centroid_series"]),
     };
+
+    if (kv["p_brightness"] !== undefined) {
+      windowed.perceived = Object.fromEntries(
+        SEMANTIC_DIMENSIONS.map((dim) => [dim, Number(kv[`p_${dim}`] ?? 0)])
+      ) as Record<SemanticDimension, number>;
+    }
+
     return windowed;
   }
 

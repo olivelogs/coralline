@@ -113,6 +113,13 @@ CorallineAgent {
                     "rms_series",      a[\rms_series].collect(_.round(0.0001)).join(","),
                     "centroid_series", a[\centroid_series].collect(_.round(1)).join(",")
                 ];
+                // Perceived semantic estimate — the same seven dimensions
+                // /coralline/play speaks, heard back from the bus
+                if(a[\perceived].notNil) {
+                    [\brightness, \warmth, \texture, \movement, \space, \weight, \attack].do { |dim|
+                        msg = msg ++ ["p_" ++ dim, a[\perceived][dim]];
+                    };
+                };
             } {
                 msg = ['/coralline/pong/audio',
                     "rms",       a[\rms],

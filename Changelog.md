@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.7] - 2026-06-09
+### Added
+- **Perceived semantics — the loop closes in one vocabulary.** `get_audio`'s windowed reply now includes `perceived`: an estimate of the same seven dimensions `play` speaks (brightness, warmth, texture, movement, space, weight, attack), heard back from the bus. Ask for brightness 0.7, hear back what the room actually gave you. New ears in the analyzer: band energies (sub+bass <150 Hz for weight, low-mid 250–800 Hz for warmth, high-mid 2–5 kHz as a harshness penalty), a fast envelope for crest factor (attack), and L/R correlation (space — the analyzer finally listens in stereo). Movement is computed from the variation of the centroid/rms history over the window — it can't exist in a snapshot at all.
+- Calibration constants live in `CorallineAnalysis.perceptionCal` (hand-tuned v1, tweakable live); fitting them from the probing-pipeline data is the planned v2, which doubles as training-data generation.
+- Known fuzz, honestly labeled: brightness/weight/texture track tightly; warmth and movement are decent (deep sub-bass material can read up to ~0.3 movement from FFT bin jitter); attack is the loosest. `perceived` describes the whole mix — one voice is a closed loop, multiple loops give a mastering-engineer's read of the sum.
+- OSC: windowed `/coralline/pong/audio` gains `p_brightness` … `p_attack` fields; the MCP treats them as optional, so an older quark keeps working.
+
 ## [0.1.6] - 2026-06-09
 ### Added
 - **Windowed `get_audio`.** `get_audio` now summarizes the last N seconds (default 4, `window` param, 0 = old instantaneous snapshot) instead of a single control-period snapshot that often landed between notes. CorallineAnalysis keeps a sclang-side ring of analysis frames (10 Hz × 60 s); the windowed reply carries level stats (mean/max/min rms), spectral centroid/flatness means over *active* frames (silence doesn't drag them down), median pitch + pitch stability, onset count/rate within the window, `active_ratio` (sound vs silence), and 12-point rms/centroid time-series showing the shape of the window. `/coralline/ping/audio` takes an optional third arg (window seconds); the pong shape with no `window` key is unchanged for back-compat.

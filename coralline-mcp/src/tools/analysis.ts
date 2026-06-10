@@ -52,8 +52,11 @@ export function registerAnalysisTools(
     "get_audio",
     "Summarize what SuperCollider has sounded like over the last few seconds: level stats (mean/max/min RMS), " +
       "spectral centroid (brightness in Hz), spectral flatness (0=tonal, 1=noisy), median pitch with stability, " +
-      "onset count/rate (rhythmic density), active_ratio (fraction of the window with sound vs silence), and " +
-      "rms/centroid time-series showing the shape of the window (building, decaying, pulsing). " +
+      "onset count/rate (rhythmic density), active_ratio (fraction of the window with sound vs silence), " +
+      "rms/centroid time-series showing the shape of the window (building, decaying, pulsing), and `perceived` — " +
+      "an estimate of the same seven semantic dimensions play speaks (brightness, warmth, texture, movement, " +
+      "space, weight, attack), heard back from the bus, so you can compare what you asked for with what the room " +
+      "is doing. Perceived describes the whole mix; with multiple loops it's a mix-level read, not per-voice. " +
       "Use after changing a loop or playing a phrase to hear the result. " +
       "Returns an error if SC is not running.",
     {
@@ -101,6 +104,14 @@ export function registerAnalysisTools(
                 onset_rate: Number(pong.onset_rate.toFixed(2)),
                 rms_series: pong.rms_series,
                 centroid_series: pong.centroid_series.map(Math.round),
+                ...(pong.perceived && {
+                  perceived: Object.fromEntries(
+                    Object.entries(pong.perceived).map(([dim, v]) => [
+                      dim,
+                      Number(v.toFixed(2)),
+                    ])
+                  ),
+                }),
               }
             : {
                 snapshot: true,

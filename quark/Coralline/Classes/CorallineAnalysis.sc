@@ -50,6 +50,12 @@ CorallineAnalysis {
     classvar <historyIndex;     // next write slot
     classvar <historyCount;     // frames written so far (caps at ring size)
 
+    // Perception calibration: constants mapping raw features → the seven
+    // semantic dimensions (0-1). Hand-tuned v1; the plan is to fit these
+    // from the probing pipeline data (see roadmap). Tweak freely:
+    //   CorallineAnalysis.perceptionCal[\brightHi] = 10000;
+    classvar <>perceptionCal;
+
     // Audio clip ring buffer (server-side, for saveClip)
     classvar <clipBuffer;       // stereo Buffer holding the last clipSeconds of bus 0
     classvar <clipPosBus;       // control bus carrying the ring write position
@@ -79,6 +85,21 @@ CorallineAnalysis {
         clipSynth = nil;
         clipSeconds = 60;
         clipStartTime = nil;
+        perceptionCal = IdentityDictionary[
+            \brightLo        -> 200,    // centroid (Hz) heard as brightness 0
+            \brightHi        -> 8000,   // centroid (Hz) heard as brightness 1 (log scale between)
+            \weightScale     -> 1.4,    // low-band ratio → weight
+            \warmScale       -> 1.8,    // low-mid ratio → warmth
+            \warmHarshPenalty -> 0.8,   // high-mid ratio docked from warmth
+            \texFlatHi       -> 0.25,   // flatness heard as texture 1 (musical signals live ~0-0.3)
+            \moveCentroidCV  -> 0.25,   // centroid coefficient-of-variation heard as full movement
+            \moveRmsCV       -> 0.5,    // rms coefficient-of-variation heard as full movement
+            \moveCentroidWt  -> 0.6,    // centroid vs rms blend in movement
+            \attackCrestLo   -> 1.5,    // crest factor floor (sustained tone ≈ 1)
+            \attackCrestRange -> 6,     // crest factor span to attack 1
+            \attackOnsetHi   -> 8,      // onsets/sec heard as fully percussive
+            \attackCrestWt   -> 0.7,    // crest vs onset-rate blend in attack
+        ];
         // recordings/ at the repo root, derived from this class file's location
         // (<repo>/quark/Coralline/Classes/CorallineAnalysis.sc) — clips are
         // keepsakes, not temp files
@@ -99,12 +120,31 @@ CorallineAnalysis {
                 var amp, freq, hasFreq, centroid, flatness;
                 var onsetTrig, onsetCount;
 
+                var lowAmp, lowMidAmp, highMidAmp, fastAmp, corr;
+
                 // Read main output bus — captures everything: SuperDirt, Tidal, all of it
                 sig = In.ar(0, 2);
                 mono = Mix.ar(sig) * 0.5;
 
                 // Amplitude tracking (smoothed)
                 amp = Amplitude.kr(mono, attackTime: 0.05, releaseTime: 0.2);
+
+                // Band energies for perceived weight/warmth — same envelope
+                // settings as amp so the ratios are comparable
+                lowAmp     = Amplitude.kr(LPF.ar(mono, 150), 0.05, 0.2);             // weight: sub + bass
+                lowMidAmp  = Amplitude.kr(BPF.ar(mono, 447, 1.23), 0.05, 0.2);       // warmth: ~250-800 Hz
+                highMidAmp = Amplitude.kr(BPF.ar(mono, 3162, 0.95), 0.05, 0.2);      // harshness: ~2-5 kHz
+
+                // Fast envelope for crest factor (perceived attack) — slow
+                // release would smear transients into the mean
+                fastAmp = Amplitude.kr(mono, 0.001, 0.05);
+
+                // L/R correlation for perceived space: 1 = mono, 0 = decorrelated.
+                // 10 Hz lowpass on the products ≈ a running ~100 ms estimate.
+                corr = (
+                    LPF.ar(sig[0] * sig[1], 10)
+                    / (LPF.ar(sig[0].squared, 10) * LPF.ar(sig[1].squared, 10)).sqrt.max(1e-9)
+                ).clip(-1, 1);
 
                 // Pitch detection
                 # freq, hasFreq = Pitch.kr(mono, minFreq: 60, maxFreq: 4000);
@@ -129,6 +169,11 @@ CorallineAnalysis {
                 Out.kr(\centroidBus.kr(0), centroid);
                 Out.kr(\flatnessBus.kr(0), flatness);
                 Out.kr(\onsetCountBus.kr(0), onsetCount);
+                Out.kr(\lowBus.kr(0), lowAmp);
+                Out.kr(\lowMidBus.kr(0), lowMidAmp);
+                Out.kr(\highMidBus.kr(0), highMidAmp);
+                Out.kr(\fastAmpBus.kr(0), fastAmp);
+                Out.kr(\corrBus.kr(0), A2K.kr(corr));
             }).add;
 
             // Clip recorder: circular-record the master bus so saveClip
@@ -151,6 +196,11 @@ CorallineAnalysis {
                 \centroid   -> Bus.control(Server.default, 1),
                 \flatness   -> Bus.control(Server.default, 1),
                 \onsetCount -> Bus.control(Server.default, 1),
+                \low        -> Bus.control(Server.default, 1),
+                \lowMid     -> Bus.control(Server.default, 1),
+                \highMid    -> Bus.control(Server.default, 1),
+                \fastAmp    -> Bus.control(Server.default, 1),
+                \corr       -> Bus.control(Server.default, 1),
             ];
 
             // Create analyzer synth at tail of default group
@@ -162,6 +212,11 @@ CorallineAnalysis {
                 \centroidBus,   analyzerBuses[\centroid].index,
                 \flatnessBus,   analyzerBuses[\flatness].index,
                 \onsetCountBus, analyzerBuses[\onsetCount].index,
+                \lowBus,        analyzerBuses[\low].index,
+                \lowMidBus,     analyzerBuses[\lowMid].index,
+                \highMidBus,    analyzerBuses[\highMid].index,
+                \fastAmpBus,    analyzerBuses[\fastAmp].index,
+                \corrBus,       analyzerBuses[\corr].index,
             ], target: Server.default.defaultGroup, addAction: \addToTail);
 
             // Allocate the audio clip ring and start recording into it
@@ -243,7 +298,12 @@ CorallineAnalysis {
             \flatness:   clean.(analyzerBuses[\flatness].getSynchronous),
             \freq:       clean.(analyzerBuses[\freq].getSynchronous),
             \hasFreq:    clean.(analyzerBuses[\hasFreq].getSynchronous),
-            \onsetCount: clean.(analyzerBuses[\onsetCount].getSynchronous)
+            \onsetCount: clean.(analyzerBuses[\onsetCount].getSynchronous),
+            \low:        clean.(analyzerBuses[\low].getSynchronous),
+            \lowMid:     clean.(analyzerBuses[\lowMid].getSynchronous),
+            \highMid:    clean.(analyzerBuses[\highMid].getSynchronous),
+            \fastAmp:    clean.(analyzerBuses[\fastAmp].getSynchronous),
+            \corr:       clean.(analyzerBuses[\corr].getSynchronous)
         )
     }
 
@@ -340,7 +400,78 @@ CorallineAnalysis {
             \onset_count:     onsetCount,
             \onset_rate:      onsetRate,
             \rms_series:      rmsSeries,
-            \centroid_series: centroidSeries
+            \centroid_series: centroidSeries,
+            \perceived:       this.prPerceive(activeFrames, centroidMean, flatnessMean, onsetRate)
+        )
+    }
+
+    // Estimate the seven semantic dimensions (0-1) from windowed features —
+    // the inverse of CorallineSemantics, heard rather than asked. Computed
+    // over active frames only so silence doesn't read as dark/dry/static.
+    // Constants live in perceptionCal (hand-tuned v1; probe-fitted v2 planned).
+    //
+    // Honest fuzz ranking: brightness/weight/texture track tightly, warmth
+    // and movement decently, attack is the loosest. And this hears the MIX —
+    // with one voice it's a closed loop, with layers it's a mastering read.
+    *prPerceive { |activeFrames, centroidMean, flatnessMean, onsetRate|
+        var cal = perceptionCal;
+        var std = { |xs, m| (xs.collect { |x| (x - m).squared }.mean).sqrt };
+        var cv = { |xs|  // coefficient of variation
+            var m = xs.mean;
+            if(m > 1e-6) { std.(xs, m) / m } { 0 }
+        };
+        var rmsMean, lowRatio, lowMidRatio, highMidRatio;
+        var fastVals, fastMean, crest, crestPart, onsetPart;
+        var brightness, warmth, texture, movement, space, weight, attack;
+
+        if(activeFrames.isEmpty) {
+            ^(\brightness: 0, \warmth: 0, \texture: 0, \movement: 0,
+              \space: 0, \weight: 0, \attack: 0)
+        };
+
+        rmsMean = activeFrames.collect(_[\rms]).mean.max(1e-6);
+        lowRatio = activeFrames.collect(_[\low]).mean / rmsMean;
+        lowMidRatio = activeFrames.collect(_[\lowMid]).mean / rmsMean;
+        highMidRatio = activeFrames.collect(_[\highMid]).mean / rmsMean;
+
+        brightness = (
+            log2(centroidMean.max(1) / cal[\brightLo])
+            / log2(cal[\brightHi] / cal[\brightLo])
+        ).clip(0, 1);
+
+        weight = (lowRatio * cal[\weightScale]).clip(0, 1);
+
+        warmth = (
+            (lowMidRatio * cal[\warmScale]) - (highMidRatio * cal[\warmHarshPenalty])
+        ).clip(0, 1);
+
+        texture = (flatnessMean / cal[\texFlatHi]).clip(0, 1);
+
+        // Centroid floored at brightLo: at sub-bass centroids the FFT bin
+        // width is huge relative to the mean, and that jitter would read
+        // as movement
+        movement = (
+            ((cv.(activeFrames.collect { |f| f[\centroid].max(cal[\brightLo]) }) / cal[\moveCentroidCV]) * cal[\moveCentroidWt])
+            + ((cv.(activeFrames.collect(_[\rms])) / cal[\moveRmsCV]) * (1 - cal[\moveCentroidWt]))
+        ).clip(0, 1);
+
+        space = (1 - activeFrames.collect(_[\corr]).mean).clip(0, 1);
+
+        fastVals = activeFrames.collect(_[\fastAmp]);
+        fastMean = fastVals.mean.max(1e-6);
+        crest = fastVals.maxItem / fastMean;
+        crestPart = ((crest - cal[\attackCrestLo]) / cal[\attackCrestRange]).clip(0, 1);
+        onsetPart = (onsetRate / cal[\attackOnsetHi]).clip(0, 1);
+        attack = ((crestPart * cal[\attackCrestWt]) + (onsetPart * (1 - cal[\attackCrestWt]))).clip(0, 1);
+
+        ^(
+            \brightness: brightness,
+            \warmth:     warmth,
+            \texture:    texture,
+            \movement:   movement,
+            \space:      space,
+            \weight:     weight,
+            \attack:     attack
         )
     }
 

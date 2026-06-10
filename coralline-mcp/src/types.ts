@@ -110,6 +110,9 @@ export interface AudioWindowPong {
   onset_rate: number;
   rms_series: number[];
   centroid_series: number[];
+  // Perceived semantic estimate — the seven play dimensions, heard back
+  // from the bus (absent if the quark predates 0.1.7)
+  perceived?: Record<SemanticDimension, number>;
 }
 
 export type AudioPong = AudioSnapshotPong | AudioWindowPong;
