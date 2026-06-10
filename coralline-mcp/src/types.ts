@@ -79,6 +79,12 @@ export interface StatePong {
   loops: number;
   loop_names: string;
   running: number;
+  // Clock fields (absent if the quark predates 0.1.9)
+  tempo_bpm?: number;
+  beats_per_bar?: number;
+  bar?: number;
+  beat_in_bar?: number;
+  next_bar_in_s?: number;
 }
 
 // Instantaneous snapshot (window = 0)

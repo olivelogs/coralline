@@ -18,10 +18,21 @@ const loopSchema = z.object({
       "Space-separated SuperDirt note numbers, e.g. \"0 3 7 12\". " +
         "n=0=C5, n=-12=C4. NOT MIDI — convert with: n = midinote - 60."
     ),
-  cycle_dur: z
+  cycle_beats: z
     .number()
     .positive()
-    .describe("Total cycle duration in seconds. Per-note dur = cycle_dur / note_count."),
+    .describe(
+      "Cycle length in BEATS on the shared clock (4 = one bar of 4/4; default tempo 120 BPM, so 4 beats = 2s). " +
+        "Per-note dur = cycle_beats / note_count. Tempo changes via set_tempo retune running loops."
+    ),
+  quant: z
+    .number()
+    .min(0)
+    .optional()
+    .describe(
+      "Beat boundary the loop start (or hot-swap) waits for. Default = one bar, so layers phase-lock " +
+        "and modifications land on the downbeat. 0 = start immediately (free/textural, no grid)."
+    ),
   brightness: z.number().min(0).max(1).optional(),
   warmth: z.number().min(0).max(1).optional(),
   texture: z.number().min(0).max(1).optional(),
@@ -41,8 +52,14 @@ function buildLoopArgs(input: z.infer<typeof loopSchema>): (string | number)[] {
     input.loop_name,
     input.synth,
     input.notes,
-    input.cycle_dur,
+    input.cycle_beats,
   ];
+
+  // Optional quant rides right after cycle_beats — the quark type-sniffs
+  // a number in that slot (a string there starts the semantic params)
+  if (input.quant !== undefined) {
+    args.push(input.quant);
+  }
 
   for (const dim of SEMANTIC_DIMENSIONS) {
     const val = (input as Record<string, unknown>)[dim];
@@ -64,8 +81,10 @@ function buildLoopArgs(input: z.infer<typeof loopSchema>): (string | number)[] {
 export function registerLoopTools(server: McpServer, osc: OscClient): void {
   server.tool(
     "loop_start",
-    "Start a named pattern loop. Notes cycle continuously through the given pattern. " +
-      "Calling loop_start with an existing loop name hot-swaps it in place — playback is not interrupted. " +
+    "Start a named pattern loop on the shared clock. Notes cycle continuously through the given pattern. " +
+      "Loops start on the next bar boundary by default, so layers phase-lock — and calling loop_start with " +
+      "an existing loop name hot-swaps it in place ON the bar, so changes land musically without interrupting " +
+      "playback. Use get_state to see the current bar position and set_tempo to move the pulse. " +
       "Semantic params are resolved by the Coralline quark.",
     loopSchema.shape,
     async (input) => {
@@ -75,7 +94,40 @@ export function registerLoopTools(server: McpServer, osc: OscClient): void {
         content: [
           {
             type: "text",
-            text: `Started loop '${input.loop_name}': ${input.synth} notes=[${input.notes}] cycle=${input.cycle_dur}s`,
+            text:
+              `Started loop '${input.loop_name}': ${input.synth} notes=[${input.notes}] ` +
+              `cycle=${input.cycle_beats} beats` +
+              (input.quant === 0 ? " (free, unquantized)" : " (from next bar)"),
+          },
+        ],
+      };
+    }
+  );
+
+  server.tool(
+    "set_tempo",
+    "Set the shared clock's tempo in BPM (and optionally the meter). Running loops follow immediately — " +
+      "loop durations are musical (beats), not seconds — so this is how you do tempo moves, ritardandos by " +
+      "steps, or a meter change (meter changes land on the next bar line). Default clock: 120 BPM, 4/4.",
+    {
+      bpm: z.number().min(20).max(300).describe("Tempo in beats per minute."),
+      beats_per_bar: z
+        .number()
+        .int()
+        .min(1)
+        .max(16)
+        .optional()
+        .describe("Beats per bar (meter). Takes effect at the next bar line."),
+    },
+    async ({ bpm, beats_per_bar }) => {
+      const args: number[] = [bpm];
+      if (beats_per_bar !== undefined) args.push(beats_per_bar);
+      osc.send("/coralline/clock/set", args);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Clock set to ${bpm} BPM${beats_per_bar !== undefined ? `, ${beats_per_bar} beats/bar from next bar` : ""}.`,
           },
         ],
       };
