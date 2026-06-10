@@ -7,6 +7,7 @@ import { registerAnalysisTools } from "./tools/analysis.js";
 import { registerDiagnosticsTool } from "./tools/diagnostics.js";
 import { registerFxTool } from "./tools/fx.js";
 import { registerLoopTools } from "./tools/loops.js";
+import { registerNotebookTools } from "./tools/notebook.js";
 import { registerPlayTool } from "./tools/play.js";
 import { registerSynthTools } from "./tools/synths.js";
 
@@ -23,7 +24,7 @@ const oscClient = new OscClient(logger);
 
 const server = new McpServer({
   name: "coralline",
-  version: "0.1.5",
+  version: "0.1.8",
 });
 
 registerPlayTool(server, oscClient);
@@ -32,6 +33,7 @@ registerAnalysisTools(server, oscClient, oscServer);
 registerSynthTools(server);
 registerFxTool(server);
 registerDiagnosticsTool(server, oscClient, oscServer);
+registerNotebookTools(server);
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
