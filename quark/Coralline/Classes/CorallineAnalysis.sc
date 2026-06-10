@@ -93,8 +93,10 @@ CorallineAnalysis {
             \warmHarshPenalty -> 0.8,   // high-mid ratio docked from warmth
             \texFlatHi       -> 0.25,   // flatness heard as texture 1 (musical signals live ~0-0.3)
             \moveCentroidCV  -> 0.25,   // centroid coefficient-of-variation heard as full movement
-            \moveRmsCV       -> 0.5,    // rms coefficient-of-variation heard as full movement
-            \moveCentroidWt  -> 0.6,    // centroid vs rms blend in movement
+            \moveRmsCV       -> 1.0,    // rms coefficient-of-variation heard as full movement
+                                        // (was 0.5 — first field report: any percussive content
+                                        // pinned movement at 1.0, even under a drone)
+            \moveCentroidWt  -> 0.65,   // centroid vs rms blend in movement
             \attackCrestLo   -> 1.5,    // crest factor floor (sustained tone ≈ 1)
             \attackCrestRange -> 6,     // crest factor span to attack 1
             \attackOnsetHi   -> 8,      // onsets/sec heard as fully percussive

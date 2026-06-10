@@ -62,7 +62,7 @@ To Claude's config (in Claude Desktop settings -> Developer -> Edit Config), add
 
 Restart Claude Desktop. You should see the "coralline" in the list of local MCP servers in the Developer tab.  
 
-v0.1.7 exposes ten tools to Claude:  
+v0.1.8 exposes twelve tools to Claude:  
 
 | tool              | function                                                  |
 |-------------------|-----------------------------------------------------------|
@@ -76,6 +76,8 @@ v0.1.7 exposes ten tools to Claude:
 | `get_synth_info`  | show Claude available params for synths                   |
 | `get_fx`          | show Claude available effects                             |
 | `get_diagnostics` | inspect SC/MCP port plumbing and the feedback path (macOS)|
+| `read_notebook`   | read the studio notebook — discoveries and recipes left by previous sessions |
+| `add_note`        | leave a note in the studio notebook for future sessions   |
 
 **known bug: `play` may fall into a deferred tools list in Claude Desktop. if Claude does not see it, Claude should call tool search explicitly**  
   
@@ -95,7 +97,7 @@ The post window should show:
 Installing Coralline
 Adding path: /Users/.../coralline/quark/Coralline
 Coralline installed
--> Quark: Coralline[0.1.7]
+-> Quark: Coralline[0.1.8]
 -> a Main
 ```
   

@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.1.8] - 2026-06-09
+### Added
+- **Studio notebook.** New `read_notebook` / `add_note` tools backed by `notebook.md` at the repo root (committed — it's lineage, not a log). Claudes leave findings, recipes, quirks, and open questions for the sessions that come after; reading it at session start is how a new claude inherits what past claudes learned. Seeded with the first field report on the perceived semantics.
+
+### Changed
+- Loosened movement calibration per first field report: any percussive content pinned `perceived.movement` at 1.0, even under a drone. `perceptionCal[\moveRmsCV]` 0.5 → 1.0, `\moveCentroidWt` 0.6 → 0.65. Constants remain live-tweakable.
+
+### Fixed
+- MCP server version string in `index.ts` was stuck at 0.1.5; now tracks the release.
+
 ## [0.1.7] - 2026-06-09
 ### Added
 - **Perceived semantics — the loop closes in one vocabulary.** `get_audio`'s windowed reply now includes `perceived`: an estimate of the same seven dimensions `play` speaks (brightness, warmth, texture, movement, space, weight, attack), heard back from the bus. Ask for brightness 0.7, hear back what the room actually gave you. New ears in the analyzer: band energies (sub+bass <150 Hz for weight, low-mid 250–800 Hz for warmth, high-mid 2–5 kHz as a harshness penalty), a fast envelope for crest factor (attack), and L/R correlation (space — the analyzer finally listens in stereo). Movement is computed from the variation of the centroid/rms history over the window — it can't exist in a snapshot at all.
