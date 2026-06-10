@@ -397,11 +397,19 @@ export class OscServer {
 
   private parseStatePong(args: (string | number)[]): StatePong {
     const kv = this.parseKV(args);
-    return {
+    const pong: StatePong = {
       loops: Number(kv["loops"] ?? 0),
       loop_names: String(kv["loop_names"] ?? ""),
       running: Number(kv["running"] ?? 0),
     };
+    if (kv["tempo_bpm"] !== undefined) {
+      pong.tempo_bpm = Number(kv["tempo_bpm"]);
+      pong.beats_per_bar = Number(kv["beats_per_bar"] ?? 4);
+      pong.bar = Number(kv["bar"] ?? 0);
+      pong.beat_in_bar = Number(kv["beat_in_bar"] ?? 0);
+      pong.next_bar_in_s = Number(kv["next_bar_in_s"] ?? 0);
+    }
+    return pong;
   }
 
   // Windowed pongs carry "window"; snapshots don't. Series arrive as
