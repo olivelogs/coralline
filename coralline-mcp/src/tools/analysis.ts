@@ -11,8 +11,10 @@ export function registerAnalysisTools(
 ): void {
   server.tool(
     "get_state",
-    "Query the current state of SuperCollider: which loops are active and whether CorallineAgent is running. " +
-      "Sends a ping and waits up to 2 seconds for a reply. Returns an error if SC is not running.",
+    "Query the current state of SuperCollider: which loops are active, whether CorallineAgent is running, " +
+      "and where the shared clock is in musical time (tempo, bar number, beat within the bar, seconds until " +
+      "the next bar line). Check this before dropping or modifying a loop if you want to time an entrance — " +
+      "loops quantize to the bar by default. Returns an error if SC is not running.",
     {},
     async () => {
       const reqId = randomUUID();
@@ -34,6 +36,15 @@ export function registerAnalysisTools(
           running: pong.running === 1,
           active_loop_count: pong.loops,
           active_loops: loopNames,
+          ...(pong.tempo_bpm !== undefined && {
+            clock: {
+              tempo_bpm: Number(pong.tempo_bpm.toFixed(1)),
+              beats_per_bar: pong.beats_per_bar,
+              bar: pong.bar,
+              beat_in_bar: Number((pong.beat_in_bar ?? 0).toFixed(2)),
+              next_bar_in_s: Number((pong.next_bar_in_s ?? 0).toFixed(2)),
+            },
+          }),
         };
 
         return {

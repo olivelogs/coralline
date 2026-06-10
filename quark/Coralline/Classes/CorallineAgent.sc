@@ -3,9 +3,13 @@
 //    Handles:
 //    - /coralline/play        → semantic play (routes through CorallineSemantics → SuperDirt)
 //    - /coralline/raw         → bypass semantics, raw SuperDirt params
-//    - /coralline/loop/start  → start pattern loop via JITLib (Pdef)
+//    - /coralline/loop/start  → start pattern loop via JITLib (Pdef), quantized
+//                               to the shared clock (cycle length in BEATS;
+//                               optional quant arg, default one bar, 0 = free)
 //    - /coralline/loop/stop   → stop a named loop
-//    - /coralline/loop/modify → hot-swap a running loop
+//    - /coralline/loop/modify → hot-swap a running loop (swap lands on the bar)
+//    - /coralline/clock/set   → set tempo in BPM (and optionally beats per bar);
+//                               running loops follow immediately
 //    - /coralline/phrase      → one-shot phrase with gradient params
 //    - /coralline/ping/state  → request state (pong)
 //    - /coralline/ping/audio  → request audio analysis (pong via CorallineAnalysis);
@@ -43,6 +47,7 @@ CorallineAgent {
     classvar <replyAddr;        // NetAddr for sending pong replies
     classvar <loops;            // Dictionary of active Pdef loops
     classvar <isRunning;
+    classvar <clock;            // shared TempoClock all loops play on
 
     // Synth aliases: maps virtual synth names to [realSynthName, extraParams]
     // e.g. superfm_v3 → superfm with voice:3 injected into raw params.
@@ -85,6 +90,10 @@ CorallineAgent {
         };
 
         replyAddr = NetAddr(replyHost, replyPort);
+
+        // Shared musical clock: 120 BPM, 4/4. Loops quantize to its bars;
+        // permanent so cmd-period stops the music without killing time itself.
+        clock = TempoClock(2).permanent_(true);
 
         this.registerResponders;
 
@@ -152,8 +161,35 @@ CorallineAgent {
             pdef.clear;
         };
         loops = IdentityDictionary.new;
+        if(clock.notNil) {
+            clock.permanent_(false);
+            clock.stop;
+            clock = nil;
+        };
         isRunning = false;
         "CorallineAgent: stopped.".postln;
+    }
+
+    // Set the shared clock tempo (and optionally meter). Running loops
+    // follow immediately — beat durations are musical, not seconds.
+    // Meter changes land on the next bar line (TempoClock requires
+    // beatsPerBar to change on its own thread, at a bar boundary).
+    *setClock { |bpm, newBeatsPerBar|
+        if(clock.isNil) {
+            "CorallineAgent: no clock — call .start first".warn;
+            ^this
+        };
+        clock.tempo_(bpm / 60);
+        if(newBeatsPerBar.notNil and: { newBeatsPerBar != clock.beatsPerBar }) {
+            clock.schedAbs(clock.nextBar, {
+                clock.beatsPerBar_(newBeatsPerBar);
+                nil
+            });
+        };
+        "CorallineAgent: clock → % bpm%".format(
+            bpm,
+            if(newBeatsPerBar.notNil) { ", %/4 at next bar".format(newBeatsPerBar) } { "" }
+        ).postln;
     }
 
     *registerResponders {
@@ -227,6 +263,19 @@ CorallineAgent {
             OSCdef(\corallinePhrase, { |msg, time, addr, recvPort|
                 this.handlePhrase(msg);
             }, '/coralline/phrase')
+        );
+
+        // ==========================================
+        // /coralline/clock/set — Set tempo / meter
+        // ==========================================
+        // Args: bpm, [beatsPerBar]
+        // Running loops follow immediately (durations are in beats)
+        oscResponders = oscResponders.add(
+            OSCdef(\corallineClockSet, { |msg, time, addr, recvPort|
+                var bpm = msg[1].asFloat;
+                var bpb = if(msg.size > 2) { msg[2].asInteger } { nil };
+                this.setClock(bpm, bpb);
+            }, '/coralline/clock/set')
         );
 
         // ==========================================
@@ -415,22 +464,36 @@ CorallineAgent {
     // ---- Loop handlers (JITLib) ----
 
     *handleLoopStart { |msg|
-        // msg: ['/coralline/loop/start', loopName, synthName, notePattern, cycleDur, ...]
+        // msg: ['/coralline/loop/start', loopName, synthName, notePattern, cycleBeats, [quant], ...]
+        // cycleBeats is in BEATS on the shared clock (4 = one bar of 4/4).
+        // Optional numeric quant follows cycleBeats (type-sniffed: a number
+        // there is quant, a string starts the semantic params): the beat
+        // boundary the loop start / hot-swap waits for. Default one bar, 0 = free.
         // Optional trailing args: semantic and/or raw params (with | separator)
-        //   /coralline/loop/start myloop supersaw "0 3 7" 2.0 brightness 0.7 | krush 3
-        var loopName, synthName, noteStr, cycleDur, notes, dur;
+        //   /coralline/loop/start myloop supersaw "0 3 7" 4 brightness 0.7 | krush 3
+        var loopName, synthName, noteStr, cycleBeats, notes, dur;
+        var quant, quantVal, paramStart;
         var semantics, rawParams, resolved, extraPairs, pipeIdx;
         var aliasInfo, semanticName, dirtName, injectParams;
 
         if(msg.size < 5) {
-            "CorallineAgent: loop needs loopName, synthName, notePattern, cycleDur".warn;
+            "CorallineAgent: loop needs loopName, synthName, notePattern, cycleBeats".warn;
             ^this
         };
 
         loopName = msg[1].asSymbol;
         synthName = msg[2].asSymbol;
         noteStr = msg[3].asString;
-        cycleDur = msg[4].asFloat;
+        cycleBeats = msg[4].asFloat;
+
+        // Optional quant arg right after cycleBeats
+        paramStart = 5;
+        quant = if(clock.notNil) { clock.beatsPerBar } { 4 };
+        if(msg.size > 5 and: { msg[5].isNumber }) {
+            quant = msg[5].asFloat;
+            paramStart = 6;
+        };
+        quantVal = quant.max(0);  // 0 = truly immediate (nil would fall back to Pdef.defaultQuant of 1)
 
         // Resolve synth alias (e.g. superfm_v3 → superfm + voice:3)
         aliasInfo = this.resolveAlias(synthName);
@@ -440,20 +503,20 @@ CorallineAgent {
 
         // Parse note pattern: "0 3 7 12" → [0, 3, 7, 12]
         notes = noteStr.split($ ).collect(_.asFloat);
-        dur = cycleDur / notes.size;
+        dur = cycleBeats / notes.size;
 
-        // Parse optional semantic + raw params (from index 5 onward)
+        // Parse optional semantic + raw params (from paramStart onward)
         semantics = IdentityDictionary.new;
         rawParams = IdentityDictionary.new;
 
-        if(msg.size > 5) {
+        if(msg.size > paramStart) {
             pipeIdx = nil;
-            (5..msg.size-1).do { |i|
+            (paramStart..msg.size-1).do { |i|
                 if(msg[i].asString == "|") { pipeIdx = i };
             };
 
             if(pipeIdx.notNil) {
-                (5, 7 .. pipeIdx - 2).do { |i|
+                (paramStart, paramStart + 2 .. pipeIdx - 2).do { |i|
                     if(i+1 < pipeIdx) {
                         semantics[msg[i].asSymbol] = msg[i+1].asFloat;
                     };
@@ -464,7 +527,7 @@ CorallineAgent {
                     };
                 };
             } {
-                (5, 7 .. msg.size - 2).do { |i|
+                (paramStart, paramStart + 2 .. msg.size - 2).do { |i|
                     if(i+1 < msg.size) {
                         semantics[msg[i].asSymbol] = msg[i+1].asFloat;
                     };
@@ -489,8 +552,11 @@ CorallineAgent {
             extraPairs = extraPairs ++ [param, val];
         };
 
-        // Create or replace a Pdef (JITLib hot-swaps naturally)
+        // Create or replace a Pdef (JITLib hot-swaps naturally).
+        // quant is set before the redefinition so both a fresh start AND a
+        // hot-swap land on the boundary — modify becomes musical.
         // Use dirtName (real SynthDef name) for SuperDirt
+        Pdef(loopName).quant_(quantVal);
         Pdef(loopName,
             Pbind(
                 \type, \dirt,
@@ -501,12 +567,16 @@ CorallineAgent {
                 \orbit, 0,
                 *extraPairs
             )
-        ).play;
+        );
+        if(Pdef(loopName).isPlaying.not) {
+            Pdef(loopName).play(clock ? TempoClock.default);
+        };
 
         loops[loopName] = Pdef(loopName);
 
-        "CorallineAgent: loop '%' started — % playing % (cycle %s, sem:% raw:% alias:%)".format(
-            loopName, semanticName, notes, cycleDur, resolved, rawParams,
+        "CorallineAgent: loop '%' started — % playing % (% beats/cycle, quant %, sem:% raw:% alias:%)".format(
+            loopName, semanticName, notes, cycleBeats,
+            if(quantVal > 0) { quantVal } { "free" }, resolved, rawParams,
             if(dirtName != semanticName) { dirtName } { "none" }
         ).postln;
     }
@@ -714,6 +784,17 @@ CorallineAgent {
 
         if(activeLoops.notEmpty) {
             msg = msg ++ ["loop_names", activeLoops.join(",")];
+        };
+
+        // Where are we in musical time? Enough to aim at the next downbeat.
+        if(clock.notNil) {
+            msg = msg ++ [
+                "tempo_bpm",     clock.tempo * 60,
+                "beats_per_bar", clock.beatsPerBar,
+                "bar",           clock.bar,
+                "beat_in_bar",   clock.beatInBar,
+                "next_bar_in_s", (clock.beats2secs(clock.nextBar) - clock.seconds).max(0)
+            ];
         };
 
         if(reqId.notNil) { msg = msg ++ ["reqId", reqId] };

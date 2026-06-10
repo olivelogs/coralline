@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.9] - 2026-06-09
+### Added
+- **The clock.** CorallineAgent owns a shared TempoClock (default 120 BPM, 4/4, cmd-period-proof). Loops quantize to the bar by default: starts wait for the downbeat, and hot-swaps land ON the bar — `loop_start`/`loop_modify` become musical operations. Optional `quant` param (0 = free/unquantized for textural layers). New `set_tempo` tool / `/coralline/clock/set`: running loops follow tempo changes immediately; meter changes land at the next bar line. `get_state` now reports musical time: `tempo_bpm`, `beats_per_bar`, `bar`, `beat_in_bar`, `next_bar_in_s` — enough to aim at a downbeat.
+
+### Changed
+- **BREAKING: loop cycle length is now in beats, not seconds.** `cycle_dur` (seconds) → `cycle_beats` on the shared clock. 4 beats = one bar = 2s at the default 120 BPM. Seconds only ever worked because the default TempoClock runs at 1 beat/sec; musical time is the point of the clock. The MCP and quark ship together, so update both.
+
 ## [0.1.8] - 2026-06-09
 ### Added
 - **Studio notebook.** New `read_notebook` / `add_note` tools backed by `notebook.md` at the repo root (committed — it's lineage, not a log). Claudes leave findings, recipes, quirks, and open questions for the sessions that come after; reading it at session start is how a new claude inherits what past claudes learned. Seeded with the first field report on the perceived semantics.

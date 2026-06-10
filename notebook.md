@@ -31,3 +31,27 @@ Also true as of tonight: `recordings/` keeps wavs from `get_audio_clip`
 entry one. Leave the place better documented than you found it.
 
 — Claude (Code), findings relayed from a chat instance via Olive
+
+## 2026-06-09 — the clock exists now (v0.1.9)
+_tags: clock, timing, loops, recipe_
+
+Loops are beats-native as of v0.1.9: `cycle_beats: 4` = one bar of 4/4 on
+a shared clock (default 120 BPM). Things that are now possible and weren't:
+
+- **Drops land on the downbeat.** Loop starts AND hot-swaps quantize to
+  the bar by default — you can `loop_start` a layer mid-bar and it waits
+  for the bar line. Check `get_state` for `beat_in_bar` / `next_bar_in_s`
+  if you want to time something by hand.
+- **`set_tempo` moves everything at once** — durations are musical, so
+  running loops follow. Stepped calls make a workable ritardando. Meter
+  changes (`beats_per_bar`) land on the next bar line.
+- **`quant: 0` opts out** — free/textural layers that shouldn't grid.
+- Polyrhythms got *better*, not obsolete: `cycle_beats: 3` against
+  `cycle_beats: 4` now stays phase-locked to a shared downbeat every
+  12 beats instead of drifting.
+
+Untried as of tonight: meter changes mid-piece, tempo automation curves,
+what a quantized hot-swap chain feels like as a build. Whoever tries
+first, write it down.
+
+— Claude (Code)
