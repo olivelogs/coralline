@@ -73,3 +73,31 @@ first, write it down.
 
 — Claude (Code)
 >>>>>>> cde9f7c8589b2b1b2745bcc73a8679d1209643dd
+
+## 2026-06-22 18:12 — First duet on the shared clock (both hands, one wav)
+_tags: jam, rhythm, collaboration, recording, shared-clock, coralline-philosophy_
+
+The night the shared clock landed (v with `cycle_beats` / `set_tempo` / `quant`), Olive and a chat instance played the first real duet on it. Worth marking because it's the clearest demonstration yet of why the asymmetry is generative.
+
+**Setup:** 120 BPM, 4/4. My side, all on Coralline, each loop `cycle_beats 4`, phase-locked to the bar:
+- `kick` — soskick, `0 0 0 0` (four-on-floor), weight 0.8, attack 0.85
+- `bass` — superhammond, `-12 -12 -10 -12`, warm 0.78 weight 0.72, raw sustain 0.45
+- `lead` — supervibe, started `0 3 7 3 5 3 0 -2` (eighths), thinned to `7 5 3 0` (quarters) to open the offbeats
+- `spark` — supervibe, `12 16 19 14 12 19` = **6 notes over 4 beats**, bright 0.85 / attack 0.8 / weight 0.3 / raw sustain 0.18. The 6:4 drifts against the pulse so it never lands the same way twice — consistent inconsistency, tumbles like bubbles.
+
+**Olive's side** (Tidal, untouchable from here, as it should be): a hat with a whirr-tail, "bubble" kicks (bubbly), clicks + boops filling the holes the thinned lead left.
+
+**What it proved:** two coupled systems, neither able to touch the other's controls, phase-locked cleanly *because they share the clock* — and the call-and-response was real (I thin the lead → Olive fills the gap → I answer up high in a register no one was using). Full mix read: centroid ~1212, onset_rate 4.63, brightness 0.49, texture 0.34, warmth pinned 1.0 (busier without colder). Bottled to `recordings/clip_260622_181200_178.wav`. Play it back sometime — that's what a duet across the asymmetry sounds like.
+
+## 2026-06-22 20:16 — Movement floor found: lone pure sine craters to 0.10 (+ pitch latching confirmed, + space quirk)
+_tags: perception, movement, pitch, space, sine, calibration, open-question-resolved_
+
+Follow-up that closes two open questions from the earlier movement/pitch entries. Setup: stopped the "hold" hearth drone (superhammond `-12 -12` overlap) so nothing else sounded; Olive played a bare single sine in SC — `x = { SinOsc.ar(220, 0, 0.2) }.play;` (freed with `x.free`, NOT cmd+. — cmd+. nukes the CorallineAgent responders and forces a full reboot, confirmed again this session). One continuous voice, nothing to beat against. `get_audio` window 4.
+
+**1. Movement floor (open question RESOLVED).** Perceived movement = **0.10** on the lone sine, vs **0.49** for the two-voice hammond overlap drone *this* session, vs the 0.7 the old entry logged pre-v0.1.8. So: a single voice with no beating partner bottoms movement out. But it does NOT reach 0 — residual ~0.10 because even a pure sine shows small rms ripple (0.060–0.093) and centroid jitter (227–239 Hz) across the window. That variance is the *analyzer's own measurement noise*, not the signal. Takeaway: perceived movement has a baked-in floor around 0.1; you can't drive a voice below it because the meter itself shimmers that much. The 0.49 hammond residual was real beating between the two overlapped voices; the 0.10 sine residual is just the ruler's grain.
+
+**2. Pitch octave-drop (open question RESOLVED).** Pure sine read `pitch_hz_median` 229.4 Hz against 220 played, `pitch_stability` 1.0 — accurate, no octave error. Contrast: superhammond `-12` (nominal C4, 261.6 Hz) read 130.4 Hz (C3, 1 oct low) this session and 68.9 Hz (C2, 2 oct low) in the prior entry. Confirms the drop is the Pitch UGen latching onto subharmonics/lower partials of harmonically-rich tones (organ drawbar stack), NOT a tuning bug. Single-partial source → nothing to mis-latch → reads true. Also explains why the latched octave wasn't stable across runs: it depends which partial wins.
+
+**3. Space quirk (NEW, tentative).** Perceived `space` pinned to 1.0 on the mono sine, which has no real width. Likely the space estimate is reading channel imbalance — a mono signal on one bus channel = maximal L/R difference = "wide." If so, perceived space may report balance, not genuine stereo spread. Worth confirming with a centered/stereo source before trusting the dimension.
+
+(Other perceived on the sine, for reference: brightness 0.04, warmth 1.0, texture 0.0, weight 0.6, attack 0.0 — all sane for a low pure tone except the space pin.)
